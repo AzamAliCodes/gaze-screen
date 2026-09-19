@@ -1,0 +1,464 @@
+/* ==========================================================================
+   GAZESCREEN — Minimal White Neo-Brutalism Design System
+   Inspired by srm-planner, elevated with 30-year Art Direction polish.
+   Crisp ink borders, tactile drop-shadows, pure white canvases & emerald accents.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+:root {
+  /* Surface Foundations */
+  --bg-primary:   #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-surface:   #ffffff;
+  --bg-subtle:    #f1f5f9;
+  --bg-paper:     #fafaf9;
+
+  /* Ink & Contrast */
+  --ink:          #121826;
+  --ink-secondary:#334155;
+  --ink-muted:    #64748b;
+  --ink-faint:    #94a3b8;
+  --ink-subtle:   #cbd5e1;
+
+  /* Chromatic Neo-Brutalism Palette (30-Year Designer Polish) */
+  /* Emerald & Lime (Success, Social Attention) */
+  --green-50:     #f0fdf4;
+  --green-100:    #dcfce7;
+  --green-200:    #bbf7d0;
+  --green-400:    #4ade80;
+  --green-500:    #22c55e;
+  --green-600:    #16a34a;
+  --green-700:    #15803d;
+  --lime-400:     #a3e635;
+  --lime-500:     #84cc16;
+
+  /* Canary & Amber Yellow (Highlights, Beacons, Focus) */
+  --yellow-50:    #fefce8;
+  --yellow-100:   #fef9c3;
+  --yellow-200:   #fef08a;
+  --yellow-400:   #facc15;
+  --yellow-500:   #eab308;
+  --amber-primary:#d97706;
+
+  /* Coral & Tangerine Orange (CTAs, Saccades, Energy) */
+  --orange-50:    #fff7ed;
+  --orange-100:   #ffedd5;
+  --orange-200:   #fed7aa;
+  --orange-400:   #fb923c;
+  --orange-500:   #f97316;
+  --orange-600:   #ea580c;
+
+  /* Cobalt & Electric Blue (Telemetry, Biometrics, Diagnostics) */
+  --blue-50:      #eff6ff;
+  --blue-100:     #dbeafe;
+  --blue-200:     #bfdbfe;
+  --blue-400:     #60a5fa;
+  --blue-500:     #3b82f6;
+  --blue-600:     #2563eb;
+  --blue-700:     #1d4ed8;
+
+  /* Cyber Violet & Purple (AI Pipeline, Neural Processing) */
+  --purple-50:    #faf5ff;
+  --purple-100:   #f3e8ff;
+  --purple-200:   #e9d5ff;
+  --purple-400:   #c084fc;
+  --purple-500:   #a855f7;
+  --purple-600:   #9333ea;
+  --purple-700:   #7e22ce;
+
+  /* Bubblegum & Hot Pink (Pediatric Fun, Accents) */
+  --pink-50:      #fdf2f8;
+  --pink-100:     #fce7f3;
+  --pink-200:     #fbcfe8;
+  --pink-400:     #f472b6;
+  --pink-500:     #ec4899;
+
+  /* Crimson & Red (Alerts, Warnings, High Saccades) */
+  --red-primary:  #dc2626;
+  --red-light:    #fee2e2;
+  --red-dark:     #b91c1c;
+
+  /* Typography */
+  --font-body:    'Plus Jakarta Sans', 'Space Grotesk', -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono:    'Space Mono', monospace;
+
+  /* Neo-Brutalism Geometry */
+  --border-width: 2.5px;
+  --border-thick: 3.5px;
+  --border-brutal: 2.5px solid var(--ink);
+  --border-thick-brutal: 3.5px solid var(--ink);
+  
+  --shadow-sm:     3px 3px 0px var(--ink);
+  --shadow-brutal: 5px 5px 0px var(--ink);
+  --shadow-lg:     8px 8px 0px var(--ink);
+  --shadow-hover:  7px 7px 0px var(--ink);
+
+  /* Border radius strictly minimalist (0px or 4px subtle stamp) */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-primary);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 9px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border: 2px solid #f1f5f9;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--ink); }
+
+/* Selection */
+::selection {
+  background: #e2e8f0;
+  color: var(--ink);
+}
+
+/* ==========================================================================
+   NEO-BRUTALISM LIGHT UTILITIES
+   ========================================================================== */
+
+/* Clean Background Utilities (No background line/grid artifacts) */
+.grid-bg {
+  background-color: #ffffff;
+}
+
+.grid-millimeter {
+  background-color: #ffffff;
+}
+
+.brutal-card {
+  background: var(--bg-surface);
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-brutal);
+  border-radius: var(--radius-md);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.brutal-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.brutal-card-lg {
+  background: var(--bg-surface);
+  border: var(--border-thick-brutal);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-md);
+}
+
+.brutal-btn {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: var(--border-brutal);
+  background: var(--green-500);
+  color: var(--ink);
+  padding: 12px 24px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: all 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  user-select: none;
+}
+
+.brutal-btn:hover {
+  background: var(--green-400);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal);
+}
+
+.brutal-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px var(--ink);
+}
+
+.brutal-btn-outline {
+  background: #ffffff;
+  color: var(--ink);
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-sm);
+}
+
+.brutal-btn-outline:hover {
+  background: var(--bg-subtle);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal);
+}
+
+.brutal-btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-sm);
+}
+
+.brutal-btn-danger:hover {
+  background: #dc2626;
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal);
+}
+
+/* Chromatic Button Variants */
+.brutal-btn-coral {
+  background: var(--orange-500);
+  color: #ffffff;
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-sm);
+}
+.brutal-btn-coral:hover {
+  background: var(--orange-600);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal);
+}
+
+.brutal-btn-yellow {
+  background: var(--yellow-400);
+  color: var(--ink);
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-sm);
+}
+.brutal-btn-yellow:hover {
+  background: var(--yellow-500);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal);
+}
+
+.brutal-btn-blue {
+  background: var(--blue-600);
+  color: #ffffff;
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-sm);
+}
+.brutal-btn-blue:hover {
+  background: var(--blue-700);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal);
+}
+
+.brutal-btn-purple {
+  background: var(--purple-600);
+  color: #ffffff;
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-sm);
+}
+.brutal-btn-purple:hover {
+  background: var(--purple-700);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal);
+}
+
+/* Chromatic Card Variants */
+.brutal-card-yellow {
+  background: #fffbeb;
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-brutal);
+  border-radius: var(--radius-md);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.brutal-card-yellow:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.brutal-card-blue {
+  background: #eff6ff;
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-brutal);
+  border-radius: var(--radius-md);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.brutal-card-blue:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.brutal-card-purple {
+  background: #faf5ff;
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-brutal);
+  border-radius: var(--radius-md);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.brutal-card-purple:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.brutal-card-orange {
+  background: #fff7ed;
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-brutal);
+  border-radius: var(--radius-md);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.brutal-card-orange:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.brutal-card-green {
+  background: #f0fdf4;
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-brutal);
+  border-radius: var(--radius-md);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.brutal-card-green:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.brutal-card-pink {
+  background: #fdf2f8;
+  border: var(--border-brutal);
+  box-shadow: var(--shadow-brutal);
+  border-radius: var(--radius-md);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.brutal-card-pink:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* Badges / Tags */
+.brutal-tag {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.2;
+  box-shadow: 2px 2px 0px var(--ink);
+}
+
+.tag-green  { background: #dcfce7; color: #15803d; }
+.tag-lime   { background: #ecfccb; color: #4d7c0f; }
+.tag-blue   { background: #dbeafe; color: #1d4ed8; }
+.tag-yellow { background: #fef3c7; color: #b45309; }
+.tag-orange { background: #ffedd5; color: #c2410c; }
+.tag-purple { background: #f3e8ff; color: #7e22ce; }
+.tag-pink   { background: #fce7f3; color: #be185d; }
+.tag-red    { background: #fee2e2; color: #b91c1c; }
+.tag-dark   { background: var(--ink); color: #ffffff; border-color: var(--ink); }
+
+/* Typography Scale */
+.text-display {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6.5vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.text-hero {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4.5vw, 3rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.text-section {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.text-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.text-body {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--ink-secondary);
+}
+
+/* Shiny Text Animation (React Bits) */
+@keyframes shiny-sweep {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Glitch Title Animation */
+@keyframes text-strobe {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-1px, 1px); }
+  40% { transform: translate(1px, -1px); }
+  60% { transform: translate(-1px, -1px); }
+  80% { transform: translate(1px, 1px); }
+}
+
+
+/* Progress bar */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #f1f5f9;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: 2px 2px 0px var(--ink);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--green-500);
+  transition: width 0.3s ease;
+}
+
+/* Responsive container */
+.container {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .container { padding: 0 1rem; }
+}
