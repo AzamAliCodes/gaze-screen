@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="GazeScreen — Front-Camera Digital Biomarker for Pediatric Neurodivergence Screening. ASD & ADHD early detection." />
+    <title>GazeScreen · Pediatric Neurodivergence Screening</title>
+    <!-- Favicon: eye in vibrant yellow with ink outline -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+    <link rel="alternate icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'><path d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' fill='%23ffffff' stroke='%23121826' stroke-width='2'/><circle cx='12' cy='12' r='4.5' fill='%23facc15' stroke='%23121826' stroke-width='1.8'/><circle cx='12' cy='12' r='2' fill='%23121826'/><circle cx='13.5' cy='10.5' r='0.8' fill='%23ffffff'/></svg>" />
+  <!-- Hard loads on deep routes must land on the home page -->
+    <script>
+      if (window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
+        window.location.replace('/');
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
