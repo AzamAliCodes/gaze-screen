@@ -7,6 +7,7 @@ import GazeTracker from '../components/GazeTracker';
 import { LiveDot } from '../components/UI';
 import { useSession } from '../context/SessionContext';
 import { TOTAL_STIMULUS_DURATION } from '../lib/stimulus';
+import soundEngine from '../lib/soundEngine';
 
 export default function StimulusPage() {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ export default function StimulusPage() {
   const [countdown, setCountdown] = useState(3);
   const [showCountdown, setShowCountdown] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isMuted, setIsMuted] = useState(soundEngine.isMuted);
+  const [audioRunning, setAudioRunning] = useState(soundEngine.isAudioRunning());
 
   // Live Tracking Telemetry
   const [liveGaze, setLiveGaze] = useState(null);
@@ -34,6 +37,33 @@ export default function StimulusPage() {
   const startTimeRef = useRef(null);
   const lastPosRef = useRef(null);
 
+  // Subscribe to sound engine state
+  useEffect(() => {
+    return soundEngine.subscribe(({ isRunning, isMuted: engineMuted }) => {
+      setAudioRunning(isRunning);
+      setIsMuted(engineMuted);
+    });
+  }, []);
+
+  // Global user gesture listener: unlock audio immediately upon any screen click/tap/keypress
+  useEffect(() => {
+    const unlockAudio = () => {
+      soundEngine.resumeContext();
+    };
+
+    window.addEventListener('click', unlockAudio, { passive: true });
+    window.addEventListener('pointerdown', unlockAudio, { passive: true });
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    window.addEventListener('keydown', unlockAudio, { passive: true });
+
+    return () => {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+  }, []);
+
   useEffect(() => {
     if (countdown <= 0) {
       setShowCountdown(false);
@@ -45,6 +75,30 @@ export default function StimulusPage() {
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [countdown, updateSession]);
+
+  // Ambient Sound & Melody Lifecycle
+  useEffect(() => {
+    if (sessionStarted && !isCompleting) {
+      soundEngine.startMelody();
+    }
+    return () => {
+      soundEngine.stopMelody();
+    };
+  }, [sessionStarted, isCompleting]);
+
+  const handleToggleSound = useCallback(() => {
+    soundEngine.resumeContext();
+    const muted = soundEngine.toggleMute();
+    setIsMuted(muted);
+    if (!muted && sessionStarted && !isCompleting) {
+      soundEngine.startMelody();
+    }
+  }, [sessionStarted, isCompleting]);
+
+  const handlePhaseChange = useCallback((newPhase) => {
+    setPhase(newPhase);
+    soundEngine.setPhase(newPhase);
+  }, []);
 
   const handleGazePoint = useCallback(
     (point) => {
@@ -79,6 +133,7 @@ export default function StimulusPage() {
       setBlinkCount((c) => c + 1);
       setLastBlinkDuration(event.duration || 135);
       setBlinkFlash(true);
+      soundEngine.playBlinkChime();
       setTimeout(() => setBlinkFlash(false), 550);
     },
     [addBlinkEvent]
@@ -88,13 +143,15 @@ export default function StimulusPage() {
   const handleComplete = useCallback(() => {
     if (isCompleting) return;
     setIsCompleting(true);
+    soundEngine.stopMelody();
+    soundEngine.playCompletionFanfare();
 
     const duration = startTimeRef.current ? (Date.now() - startTimeRef.current) / 1000 : 60;
     updateSession({ completedAt: Date.now(), totalDuration: duration });
 
     setTimeout(() => {
       navigate('/analysis');
-    }, 400);
+    }, 600);
   }, [isCompleting, navigate, updateSession]);
 
   const elapsed = Math.round(progress * (TOTAL_STIMULUS_DURATION / 1000));
@@ -140,10 +197,13 @@ export default function StimulusPage() {
                 flexDirection: 'column',
                 gap: 16,
               }}
+              onPointerDown={() => soundEngine.resumeContext()}
+              onClick={() => soundEngine.resumeContext()}
             >
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                 <span className="brutal-tag tag-blue">OPTICAL SENSORS SYNCHRONIZED</span>
                 <span className="brutal-tag tag-yellow">60s PROTOCOL</span>
+                <span className="brutal-tag tag-green">🎵 AUDIO MELODY READY</span>
               </div>
               <motion.div
                 key={countdown}
@@ -177,6 +237,19 @@ export default function StimulusPage() {
                 }}
               >
                 {session.childName ? `${session.childName}, watch the shapes on screen!` : 'Please direct child’s attention to screen'}
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  color: 'var(--ink-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <span>🎵 ADHD Deep Focus & Relief music ready (tap anywhere if muted)</span>
               </div>
             </motion.div>
           )}
@@ -431,6 +504,47 @@ export default function StimulusPage() {
               </div>
             </div>
 
+            {/* Interactive ADHD Focus Music Toggle Button */}
+            <button
+              onClick={handleToggleSound}
+              style={{
+                background: isMuted ? '#f8fafc' : !audioRunning ? '#fef3c7' : '#ecfdf5',
+                color: isMuted ? 'var(--ink-secondary)' : !audioRunning ? '#92400e' : '#065f46',
+                border: '2px solid var(--ink)',
+                borderRadius: '3px',
+                padding: '5px 10px',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.72rem',
+                fontWeight: 900,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                boxShadow: '2.5px 2.5px 0px var(--ink)',
+                transition: 'all 0.15s ease',
+              }}
+              title={isMuted ? 'Unmute ADHD focus music' : !audioRunning ? 'Click to play ADHD focus music' : 'Mute ADHD focus music'}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'translate(-1px, -1px)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'translate(0, 0)')}
+            >
+              <span style={{ fontSize: '0.85rem' }}>{isMuted ? '🔇' : !audioRunning ? '🔊' : '🎵'}</span>
+              <span>{isMuted ? 'ADHD MUSIC: OFF' : !audioRunning ? 'PLAY ADHD MUSIC' : 'ADHD MUSIC: ON'}</span>
+
+              {/* Animated audio wave bars when playing */}
+              {!isMuted && audioRunning && sessionStarted && !isCompleting && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 2, height: 11, marginLeft: 2 }}>
+                  {[0.7, 1.0, 0.6].map((scale, i) => (
+                    <motion.div
+                      key={i}
+                      style={{ width: 2.5, background: '#10b981', borderRadius: 1 }}
+                      animate={{ height: [3, 11 * scale, 3] }}
+                      transition={{ duration: 0.5 + i * 0.14, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  ))}
+                </div>
+              )}
+            </button>
+
             {/* Complete Test & View Report Early Button */}
             <button
               onClick={handleComplete}
@@ -460,11 +574,57 @@ export default function StimulusPage() {
           </div>
         </div>
 
+        {/* Floating Autoplay Audio Unblock Banner */}
+        <AnimatePresence>
+          {sessionStarted && !audioRunning && !isMuted && !isCompleting && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              style={{
+                position: 'fixed',
+                top: 56,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 60,
+              }}
+            >
+              <button
+                onClick={() => {
+                  soundEngine.resumeAudio();
+                  soundEngine.playTestTone();
+                }}
+                style={{
+                  background: 'var(--yellow-300)',
+                  color: 'var(--ink)',
+                  border: '2px solid var(--ink)',
+                  borderRadius: '3px',
+                  boxShadow: '3px 3px 0px var(--ink)',
+                  padding: '5px 14px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.74rem',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <span>🔊</span>
+                <span>BROWSER AUDIO PAUSED — CLICK ANYWHERE TO PLAY ADHD FOCUS MUSIC</span>
+                <span className="brutal-tag tag-blue" style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
+                  PLAY
+                </span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Clean Stimulus Canvas Area (Unobstructed View for Child) */}
         <div style={{ position: 'fixed', inset: '56px 0 9px 0' }}>
           <StimulusPlayer
             active={sessionStarted}
-            onPhaseChange={setPhase}
+            onPhaseChange={handlePhaseChange}
             onProgress={setProgress}
             onComplete={handleComplete}
           />

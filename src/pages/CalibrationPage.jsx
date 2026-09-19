@@ -7,6 +7,7 @@ import ShinyText from '../components/ShinyText';
 import SpotlightCard from '../components/SpotlightCard';
 import { LiveDot } from '../components/UI';
 import { useSession } from '../context/SessionContext';
+import soundEngine from '../lib/soundEngine';
 
 function NavBar() {
   const navigate = useNavigate();
@@ -308,6 +309,7 @@ export default function CalibrationPage() {
   }, [checks, session.calibrated, updateSession]);
 
   const handleStart = () => {
+    soundEngine.prepareAudio();
     streamRef.current?.getTracks().forEach((t) => t.stop());
     navigate('/stimulus');
   };

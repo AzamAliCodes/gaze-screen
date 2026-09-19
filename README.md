@@ -38,6 +38,7 @@ A **60-second, browser-based, front-camera digital biomarker** for early pediatr
   - Saccadic Velocity & Divergence (px/s)
   - Spontaneous Eye Aspect Ratio (EAR) Blink Dynamics
 - 📑 **Plain-Language Clinical Report** — Interactive breakdown featuring visual gaze heatmaps, DSM-5 aligned risk categorization (Low / Moderate / Elevated), triage recommendations, and local pediatric resource finders.
+- 🎵 **ADHD Focus & Relief Soundtrack** — Integrated 60-second mastered soundtrack for deep ADHD focus and concentration, with smooth fade-in/fade-out, cross-browser autoplay unlocking, and interactive mute/playback controls.
 - 🎨 **Minimal White Neo-Brutalist Design** — High-contrast, clean medical brutalism with tactile physics, interactive spotlights, and clear developmental accessibility.
 
 ---
@@ -51,6 +52,11 @@ GazeScreen/
 ├── package.json                           # Dependencies & build scripts
 ├── vite.config.js                         # Vite build & plugin configuration
 ├── vercel.json                            # Vercel deployment configuration
+├── public/
+│   ├── favicon.svg
+│   ├── icons.svg
+│   └── audio/
+│       └── adhd_focus.mp3                 # 60s mastered ADHD relief & deep focus soundtrack
 └── src/
     ├── App.jsx                            # Route configuration & session provider
     ├── main.jsx                           # Application bootstrap
@@ -74,6 +80,7 @@ GazeScreen/
     │   └── SessionContext.jsx             # Global session state & biometric store
     ├── lib/
     │   ├── classifier.js                  # Digital biomarker derivation & heuristic risk scoring
+    │   ├── soundEngine.js                 # ADHD focus soundtrack player & audio controller
     │   └── stimulus.js                    # Stimulus phase timeline & timing definitions
     └── pages/
         ├── LandingPage.jsx                # Project overview, clinical rationale & CTA
