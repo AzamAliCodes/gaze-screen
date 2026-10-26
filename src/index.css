@@ -459,6 +459,349 @@ body {
   padding: 0 1.5rem;
 }
 
+/* ==========================================================================
+   MOBILE & IPHONE RESPONSIVE OVERRIDES
+   ========================================================================== */
 @media (max-width: 768px) {
-  .container { padding: 0 1rem; }
+  .container {
+    padding: 0 1rem;
+  }
+
+  /* Responsive typography downscaling */
+  .text-display {
+    font-size: clamp(2rem, 11vw, 3rem) !important;
+  }
+
+  .text-hero {
+    font-size: clamp(1.5rem, 7.5vw, 2.2rem) !important;
+  }
+
+  .text-section {
+    font-size: clamp(1.15rem, 5vw, 1.45rem) !important;
+  }
+
+  /* Compact button styling on mobile touch devices */
+  .brutal-btn {
+    padding: 10px 18px;
+    font-size: 0.78rem;
+  }
+
+  /* Sticky navs on mobile */
+  nav {
+    padding: 0.75rem 1rem !important;
+  }
+
+  /* Main view padding reduction on phones */
+  main {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Subtle shadow compression on mobile for cleaner density */
+  .brutal-card,
+  .brutal-card-lg,
+  .brutal-card-yellow,
+  .brutal-card-blue,
+  .brutal-card-purple,
+  .brutal-card-orange,
+  .brutal-card-green,
+  .brutal-card-pink {
+    box-shadow: 3.5px 3.5px 0px var(--ink) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Hide non-essential secondary telemetry in tight top HUDs */
+  .hud-hide-mobile {
+    display: none !important;
+  }
+
+  /* Mobile full width utility */
+  .mobile-full-width {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .mobile-stack {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  /* Prevent any horizontal page shaking or overflow */
+  body, html {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
+  /* Compact Brutal Tag padding */
+  .brutal-tag {
+    font-size: 0.64rem !important;
+    padding: 2px 6px !important;
+  }
+}
+
+/* ==========================================================================
+   CLINICAL PDF PRINTING & EXPORT ENGINE
+   Preserves authentic Neo-Brutalism (bold ink borders, solid drop shadows,
+   vibrant tags). Eliminates blank gaps by fitting all screening telemetry,
+   gauges, dual tracks, and the radar profile on Page 1 in balanced proportion.
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 12mm 10mm 12mm;
+  }
+
+  /* Force exact color reproduction in Chromium and Safari */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Reset body and html container models */
+  html,
+  body {
+    background: #ffffff !important;
+    color: #121826 !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    font-size: 9.5pt !important;
+    line-height: 1.32 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #root,
+  .page-transition-root,
+  .report-page-root {
+    min-height: auto !important;
+    height: auto !important;
+    transform: none !important;
+    filter: none !important;
+    display: block !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+  }
+
+  /* Hide web-only buttons and interactive controls */
+  .no-print,
+  button,
+  .brutal-btn,
+  .heatmap-empty {
+    display: none !important;
+  }
+
+  /* Reveal print-only headers, timestamps and disclaimers */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Enforce static top positioning for Nav header so it always sits at the very top of page 1 */
+  nav,
+  .report-nav {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    padding: 0 0 6px 0 !important;
+    margin: 0 0 8px 0 !important;
+    border-bottom: 2.5px solid #121826 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* Unpad main content area */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  main > div {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* ── Authentic Neo-Brutalism Styling in PDF ─────────────────────── */
+  .brutal-card,
+  .brutal-card-lg,
+  .spotlight-card {
+    border: 2px solid #121826 !important;
+    box-shadow: 3px 3px 0px #121826 !important;
+    border-radius: 3px !important;
+  }
+
+  .brutal-tag {
+    border: 1.5px solid #121826 !important;
+    box-shadow: 1.5px 1.5px 0px #121826 !important;
+    font-weight: 800 !important;
+  }
+
+  /* ── Patient Header Block ───────────────────────────────────────── */
+  .patient-header-block {
+    margin-bottom: 6px !important;
+  }
+  .patient-header-block h1 {
+    font-size: 1.25rem !important;
+    margin: 2px 0 !important;
+    line-height: 1.2 !important;
+  }
+  .patient-header-block div {
+    margin-bottom: 4px !important;
+  }
+
+  /* ── Primary Assessment Banner ──────────────────────────────────── */
+  .primary-banner-card {
+    padding: 8px 14px !important;
+    margin-bottom: 8px !important;
+  }
+  .primary-banner-card div[style*="font-size: 1.75rem"] {
+    font-size: 1.2rem !important;
+    margin-bottom: 2px !important;
+    line-height: 1.2 !important;
+  }
+  .primary-banner-card p {
+    font-size: 0.74rem !important;
+    line-height: 1.3 !important;
+    max-width: 100% !important;
+  }
+
+  /* Compact ScoreGauge Box */
+  .score-gauge-box {
+    padding: 4px 10px !important;
+    box-shadow: 2px 2px 0px #121826 !important;
+  }
+  .score-gauge-box svg {
+    width: 175px !important;
+    height: 95px !important;
+  }
+  .score-gauge-box div[style*="font-size: 2.8rem"] {
+    font-size: 1.85rem !important;
+    line-height: 1 !important;
+  }
+
+  /* ── Dual Track Grid (ADHD & ASD stacked full width) ────────────── */
+  .dual-track-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
+  }
+
+  .dual-track-card {
+    padding: 6px 10px !important;
+    margin-bottom: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    box-shadow: 2px 2px 0px #121826 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .dual-track-card div[style*="font-size: 0.95rem"] {
+    font-size: 0.82rem !important;
+    margin-bottom: 1px !important;
+  }
+  .dual-track-card p {
+    font-size: 0.7rem !important;
+    line-height: 1.25 !important;
+  }
+
+  /* ── Telemetry & Radar Grid: Cleanly on Page 1 ───────────────────── */
+  .telemetry-radar-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 8px !important;
+    break-before: auto !important;
+    page-break-before: auto !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .telemetry-card,
+  .radar-card {
+    padding: 8px 12px !important;
+    box-shadow: 2.5px 2.5px 0px #121826 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Metric Rows inside Telemetry Card: super compact */
+  .metric-row-item {
+    padding: 2.5px 0 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+  }
+  .metric-row-label {
+    font-size: 0.74rem !important;
+    line-height: 1.2 !important;
+  }
+  .metric-row-sub {
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+  }
+  .metric-row-val {
+    font-size: 0.85rem !important;
+  }
+
+  /* Optical samples & blinks boxes */
+  .telemetry-stats-row {
+    gap: 8px !important;
+    margin-top: 6px !important;
+  }
+  .telemetry-stat-box {
+    padding: 4px 6px !important;
+    box-shadow: 1.5px 1.5px 0px #121826 !important;
+  }
+  .telemetry-stat-num {
+    font-size: 0.95rem !important;
+  }
+
+  /* Radar chart height */
+  .radar-card svg {
+    max-height: 175px !important;
+  }
+
+  /* ── Next Steps for Your Clinician ─────────────────────────────── */
+  .next-steps-card {
+    padding: 8px 12px !important;
+    margin-bottom: 8px !important;
+    box-shadow: 2.5px 2.5px 0px #121826 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .next-steps-card p {
+    font-size: 0.73rem !important;
+    margin-bottom: 4px !important;
+    line-height: 1.3 !important;
+  }
+  .next-steps-card div[style*="border: 1.5px solid var(--ink)"] {
+    padding: 4px 8px !important;
+    font-size: 0.73rem !important;
+    margin-bottom: 4px !important;
+  }
+
+  /* Page break safeguards on tables, SVG and cards */
+  table,
+  tr,
+  svg {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
 }

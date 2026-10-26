@@ -84,7 +84,7 @@ export default function GazeHeatmap({ gazePoints = [], width = 640, height = 280
       ref={canvasRef}
       width={width}
       height={height}
-      style={{ display: 'block', ...style }}
+      style={{ display: 'block', maxWidth: '100%', height: 'auto', ...style }}
     />
   );
 }

@@ -12,7 +12,7 @@ export function SessionProvider({ children }) {
   const [session, setSession] = useState({
     // Consent
     consentGiven: false,
-    childAge: '4',
+    childAge: '',
     childName: '',
     parentName: '',
 

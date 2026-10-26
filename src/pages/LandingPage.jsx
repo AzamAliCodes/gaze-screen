@@ -4,35 +4,40 @@ import PageTransition from '../components/PageTransition';
 import MotionButton from '../components/MotionButton';
 import ShinyText from '../components/ShinyText';
 import SpotlightCard from '../components/SpotlightCard';
-import DecryptedText from '../components/DecryptedText';
-import { LiveDot } from '../components/UI';
 
-/* ── Interactive Clinical Eye Icon ── */
+/* ── Interactive Clinical Eye Icon with Synchronized Shiny Flare & Floating Motion ── */
 function EyeLogo() {
   return (
     <motion.div
-      style={{ position: 'relative', width: 84, height: 84, margin: '0 auto' }}
-      whileHover={{ scale: 1.05 }}
-      transition={{ type: 'spring', stiffness: 350, damping: 20 }}
+      style={{ position: 'relative', width: 90, height: 90, margin: '0 auto' }}
+      whileHover={{ scale: 1.08 }}
+      animate={{ y: [-5, 5, -5] }}
+      transition={{
+        y: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' },
+        scale: { type: 'spring', stiffness: 350, damping: 20 },
+      }}
     >
-      {/* Outer subtle radar ring */}
+      {/* Outer Optical Radar Flare Aura */}
       <motion.div
         style={{
           position: 'absolute',
-          inset: -8,
+          inset: -7,
           borderRadius: '50%',
-          border: '2px dashed #94a3b8',
-          opacity: 0.4,
+          border: '2px dashed rgba(37, 99, 235, 0.45)',
+          pointerEvents: 'none',
         }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+        animate={{ rotate: 360, scale: [0.97, 1.05, 0.97] }}
+        transition={{
+          rotate: { duration: 16, repeat: Infinity, ease: 'linear' },
+          scale: { duration: 3.5, repeat: Infinity, ease: 'easeInOut' },
+        }}
       />
 
       {/* Main Eye Container */}
       <div
         style={{
-          width: 84,
-          height: 84,
+          width: 90,
+          height: 90,
           borderRadius: '50%',
           background: '#ffffff',
           border: '3px solid var(--ink)',
@@ -41,18 +46,63 @@ function EyeLogo() {
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="1.8">
+        {/* Synchronized Shiny Flare Beam (Identical to GAZESCREEN title) */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: '50%',
+            overflow: 'hidden',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              inset: '-100%',
+              background:
+                'linear-gradient(120deg, transparent 38%, rgba(37, 99, 235, 0.28) 46%, rgba(96, 165, 250, 0.8) 50%, rgba(37, 99, 235, 0.28) 54%, transparent 62%)',
+              backgroundSize: '220% 100%',
+              animation: 'shiny-sweep 3.5s ease-in-out infinite',
+            }}
+          />
+        </div>
+
+        {/* Clinical Eye SVG */}
+        <svg
+          width="46"
+          height="46"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="var(--ink)"
+          strokeWidth="1.8"
+          style={{ position: 'relative', zIndex: 2 }}
+        >
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle cx="12" cy="12" r="3.5" stroke="var(--ink)" strokeWidth="2" fill="#f8fafc" />
+          <circle cx="12" cy="12" r="3.6" stroke="var(--ink)" strokeWidth="2" fill="#f8fafc" />
           <motion.circle
             cx="12"
             cy="12"
-            r="1.8"
+            r="2.1"
             fill="var(--blue-600)"
-            animate={{ scale: [1, 1.25, 1] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{
+              scale: [1, 1.35, 1],
+              fill: ['var(--blue-600)', '#60a5fa', 'var(--blue-600)'],
+            }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          {/* Twinkle Specular Glint */}
+          <motion.circle
+            cx="13.1"
+            cy="10.9"
+            r="0.8"
+            fill="#ffffff"
+            animate={{ opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
           />
         </svg>
       </div>
@@ -121,29 +171,6 @@ export default function LandingPage() {
               GAZE<span style={{ color: 'var(--orange-500)' }}>SCREEN</span>
             </span>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <span className="brutal-tag tag-blue">HealthTech</span>
-            <span className="brutal-tag tag-pink">Pediatric Screening</span>
-            <span className="brutal-tag tag-yellow">Digital Biomarker</span>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '3px 8px',
-                border: '1.5px solid var(--ink)',
-                borderRadius: '3px',
-                background: '#ffffff',
-                boxShadow: '2px 2px 0px var(--ink)',
-              }}
-            >
-              <LiveDot />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', fontWeight: 700, color: 'var(--ink)' }}>
-                ON-DEVICE ML
-              </span>
-            </div>
-          </div>
         </nav>
 
         {/* Hero Section */}
@@ -167,25 +194,6 @@ export default function LandingPage() {
               transition={{ delay: 0.15, duration: 0.5 }}
               style={{ marginTop: '1.75rem' }}
             >
-              <div style={{ display: 'inline-flex', marginBottom: 14 }}>
-                <span
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.74rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    padding: '6px 14px',
-                    background: 'var(--yellow-100)',
-                    border: '2px solid var(--ink)',
-                    borderRadius: '3px',
-                    boxShadow: '2.5px 2.5px 0px var(--ink)',
-                    color: 'var(--ink)',
-                  }}
-                >
-                  <DecryptedText text="GAZESCREEN · DIGITAL BIOMARKER ENGINE" speed={25} />
-                </span>
-              </div>
 
               <h1 className="text-display" style={{ marginBottom: 10 }}>
                 <ShinyText color="var(--ink)" shineColor="var(--blue-600)" speed={3.5}>
@@ -248,60 +256,33 @@ export default function LandingPage() {
               </MotionButton>
               <MotionButton
                 variant="blue"
-                onClick={() => document.getElementById('how-it-works').scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
                 style={{ fontSize: '0.95rem', padding: '14px 26px' }}
+                icon={
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }}>
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                }
               >
                 How It Works
               </MotionButton>
+              <MotionButton
+                variant="yellow"
+                onClick={() => navigate('/research')}
+                style={{ fontSize: '0.95rem', padding: '14px 28px' }}
+                icon={
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 8 }}>
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                  </svg>
+                }
+              >
+                Explore Research Model
+              </MotionButton>
             </motion.div>
 
-            {/* Stats Spotlight Grid — Neo-Brutalist Color Blocks */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.45 }}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                gap: 16,
-                maxWidth: 760,
-                margin: '0 auto',
-              }}
-            >
-              {[
-                { val: '60s', label: 'Session Time', bg: '#fff7ed', color: 'var(--orange-600)', border: 'var(--orange-400)' },
-                { val: '100%', label: 'On-Device ML', bg: '#eff6ff', color: 'var(--blue-600)', border: 'var(--blue-400)' },
-                { val: '0 kb', label: 'Data Uploaded', bg: '#faf5ff', color: 'var(--purple-600)', border: 'var(--purple-400)' },
-                { val: 'All Ages', label: 'Any Age Group', bg: '#fefce8', color: 'var(--amber-primary)', border: 'var(--yellow-400)' },
-              ].map((s, i) => (
-                <SpotlightCard
-                  key={i}
-                  style={{
-                    padding: '1.25rem 1rem',
-                    textAlign: 'center',
-                    background: s.bg,
-                    border: '2.5px solid var(--ink)',
-                    boxShadow: '4px 4px 0px var(--ink)',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontWeight: 900,
-                      fontSize: s.val.length > 5 ? '1.55rem' : '1.85rem',
-                      color: s.color,
-                      lineHeight: 1.1,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {s.val}
-                  </div>
-                  <div className="text-label" style={{ marginTop: 6, color: 'var(--ink)' }}>
-                    {s.label}
-                  </div>
-                </SpotlightCard>
-              ))}
-            </motion.div>
           </div>
         </main>
 
@@ -328,7 +309,7 @@ export default function LandingPage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 230px), 1fr))',
                 gap: 20,
               }}
             >
@@ -490,7 +471,7 @@ export default function LandingPage() {
                 Workflow Pipeline
               </span>
               <h2 className="text-section" style={{ marginTop: 6 }}>
-                4 Steps. 90 Seconds. Zero Friction.
+                4 Simple Steps.
               </h2>
             </div>
 

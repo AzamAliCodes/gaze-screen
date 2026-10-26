@@ -1,0 +1,11 @@
+# Exact numerical/runtime versions used for the saved joblib models.
+numpy==2.5.3
+scipy==1.18.1
+pandas==3.0.6
+scikit-learn==1.9.1
+joblib==1.6.0
+h5py==3.16.0
+fastapi==0.135.1
+uvicorn==0.41.0
+pydantic==2.12.5
+httpx>=0.28,<1

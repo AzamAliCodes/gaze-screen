@@ -7,7 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test tests/*.test.js",
+    "model:setup": "node scripts/model.mjs setup",
+    "model:train": "node scripts/model.mjs train",
+    "model:export": "node scripts/model.mjs export",
+    "model:serve": "node scripts/model.mjs serve",
+    "model:test": "node scripts/model.mjs test"
   },
   "dependencies": {
     "framer-motion": "^13.2.0",

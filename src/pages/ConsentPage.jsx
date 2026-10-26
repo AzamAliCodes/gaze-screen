@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { AlertTriangle, Check } from 'lucide-react';
 import PageTransition from '../components/PageTransition';
 import MotionButton from '../components/MotionButton';
 import ShinyText from '../components/ShinyText';
@@ -80,7 +81,7 @@ function NavBar() {
   );
 }
 
-function FormField({ label, type = 'text', value, onChange, placeholder, required }) {
+function FormField({ label, type = 'text', value, onChange, onKeyDown, placeholder, required, min, max }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <label
@@ -99,7 +100,10 @@ function FormField({ label, type = 'text', value, onChange, placeholder, require
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={onKeyDown}
         placeholder={placeholder}
+        min={min}
+        max={max}
         style={{
           background: '#ffffff',
           border: '2px solid var(--ink)',
@@ -194,15 +198,38 @@ export default function ConsentPage() {
   const navigate = useNavigate();
   const { updateSession } = useSession();
 
-  const [form, setForm] = useState({ parentName: '', childName: '', childAge: '4' });
+  const [form, setForm] = useState({ parentName: '', childName: '', childAge: '' });
   const [consents, setConsents] = useState({ camera: false, noVideo: false, notDiagnosis: false, age: false });
 
+  const isAgeEntered = form.childAge.trim().length > 0;
   const numAge = parseInt(form.childAge, 10);
-  const isValidAge = !isNaN(numAge) && numAge >= 1 && numAge <= 100;
-  const cohort = getCohortInfo(form.childAge);
+  const isValidAge = isAgeEntered && !isNaN(numAge) && numAge >= 1 && numAge <= 99;
+  const cohort = getCohortInfo(isValidAge ? numAge : NaN);
   const allConsented = Object.values(consents).every(Boolean);
   const formFilled = form.parentName.trim() && form.childName.trim() && isValidAge;
   const canProceed = allConsented && formFilled;
+
+  const handleAgeChange = (raw) => {
+    // Strictly positive integers: strip any non-digit character (blocking minus signs, commas, decimals, exponents)
+    const digitsOnly = String(raw).replace(/\D/g, '');
+    if (!digitsOnly) {
+      setForm((p) => ({ ...p, childAge: '' }));
+      return;
+    }
+    const val = parseInt(digitsOnly, 10);
+    if (val > 99) {
+      setForm((p) => ({ ...p, childAge: '99' }));
+    } else {
+      setForm((p) => ({ ...p, childAge: String(val) }));
+    }
+  };
+
+  const handleAgeKeyDown = (e) => {
+    // Prevent negative signs, plus, exponents, and decimals on keyboard input
+    if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
 
   const handleProceed = () => {
     updateSession({
@@ -258,8 +285,8 @@ export default function ConsentPage() {
                 Demographic Profile
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16 }}>
                   <FormField
                     label="Parent / Observer Name"
                     value={form.parentName}
@@ -274,228 +301,71 @@ export default function ConsentPage() {
                     placeholder="e.g. Leo M."
                     required
                   />
+                  <FormField
+                    label="Subject's Age"
+                    type="number"
+                    min="1"
+                    max="99"
+                    value={form.childAge}
+                    onChange={handleAgeChange}
+                    onKeyDown={handleAgeKeyDown}
+                    placeholder="e.g. 6"
+                    required
+                  />
                 </div>
 
-                {/* Age Section with Clinical Guidance & Dynamic Live Response */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-                    <label
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.76rem',
-                        fontWeight: 700,
-                        color: 'var(--ink)',
-                        letterSpacing: '0.06em',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      Subject's Age (Years) <span style={{ color: 'var(--red-primary)' }}>*</span>
-                    </label>
-                    {isValidAge && (
-                      <span className={`brutal-tag ${cohort.badgeClass}`} style={{ fontSize: '0.66rem', padding: '2px 8px' }}>
-                        ● {cohort.category.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Age Selector Buttons & Custom Input */}
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                    {/* Preschool direct buttons */}
-                    {[2, 3, 4, 5, 6].map((age) => {
-                      const isSelected = form.childAge === String(age);
-                      return (
-                        <button
-                          key={age}
-                          type="button"
-                          onClick={() => setForm((p) => ({ ...p, childAge: String(age) }))}
-                          style={{
-                            padding: '7px 15px',
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '0.88rem',
-                            fontWeight: 800,
-                            background: isSelected ? 'var(--yellow-400)' : '#ffffff',
-                            border: '2px solid var(--ink)',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            boxShadow: isSelected ? '3px 3px 0px var(--ink)' : '2px 2px 0px var(--ink)',
-                            color: 'var(--ink)',
-                            transform: isSelected ? 'translate(-1px, -1px)' : 'none',
-                            transition: 'all 0.12s ease',
-                          }}
-                        >
-                          {age} yrs
-                        </button>
-                      );
-                    })}
-
-                    {/* Developmental Cohort Range Buttons */}
-                    {[
-                      { label: '7–12y (School)', min: 7, max: 12, defaultAge: '9' },
-                      { label: '13–17y (Teen)', min: 13, max: 17, defaultAge: '15' },
-                      { label: '18+ (Adult)', min: 18, max: 99, defaultAge: '24' },
-                    ].map((group) => {
-                      const isRangeActive = numAge >= group.min && numAge <= group.max;
-                      return (
-                        <button
-                          key={group.label}
-                          type="button"
-                          onClick={() => setForm((p) => ({ ...p, childAge: group.defaultAge }))}
-                          style={{
-                            padding: '7px 13px',
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            background: isRangeActive ? 'var(--blue-600)' : '#ffffff',
-                            border: '2px solid var(--ink)',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            boxShadow: isRangeActive ? '3px 3px 0px var(--ink)' : '2px 2px 0px var(--ink)',
-                            color: isRangeActive ? '#ffffff' : 'var(--ink)',
-                            transform: isRangeActive ? 'translate(-1px, -1px)' : 'none',
-                            transition: 'all 0.12s ease',
-                          }}
-                        >
-                          {group.label}
-                        </button>
-                      );
-                    })}
-
-                    {/* Custom Exact Age Input */}
-                    <div style={{ display: 'flex', alignItems: 'center', background: '#ffffff', border: '2px solid var(--ink)', borderRadius: '4px', boxShadow: '2px 2px 0px var(--ink)', padding: '0 8px', width: 110 }}>
-                      <input
-                        type="number"
-                        min="1"
-                        max="99"
-                        value={form.childAge}
-                        onChange={(e) => setForm((p) => ({ ...p, childAge: e.target.value }))}
-                        placeholder="Age"
+                {isValidAge ? (
+                  <div
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: '4px',
+                      border: '2px solid var(--ink)',
+                      background: cohort.badgeBg,
+                      boxShadow: '2.5px 2.5px 0px var(--ink)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span
                         style={{
-                          width: '100%',
-                          background: 'transparent',
-                          border: 'none',
-                          color: 'var(--ink)',
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: '0.88rem',
-                          fontWeight: 700,
-                          padding: '6px 0',
-                          outline: 'none',
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          background: cohort.badgeColor,
+                          display: 'inline-block',
                         }}
                       />
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--ink-muted)', fontWeight: 700 }}>
-                        YRS
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.84rem', color: 'var(--ink)' }}>
+                        Age Group: {cohort.title}
                       </span>
                     </div>
+                    <span className={`brutal-tag ${cohort.badgeClass}`} style={{ fontSize: '0.68rem', padding: '2px 8px' }}>
+                      ● AGE {numAge}
+                    </span>
                   </div>
-
-                  {/* PROPER CLINICAL RESPONSE CARD: Dynamic Age Cohort Calibration */}
-                  <AnimatePresence mode="wait">
-                    {isValidAge ? (
-                      <motion.div
-                        key={cohort.cohortId + '-' + form.childAge}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.18 }}
-                        style={{
-                          marginTop: 6,
-                          padding: '14px 16px',
-                          borderRadius: '4px',
-                          border: '2px solid var(--ink)',
-                          background: cohort.badgeBg,
-                          boxShadow: '3px 3px 0px var(--ink)',
-                        }}
-                      >
-                        {/* Status Header */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 6 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span
-                              style={{
-                                width: 9,
-                                height: 9,
-                                borderRadius: '50%',
-                                background: cohort.badgeColor,
-                                display: 'inline-block',
-                              }}
-                            />
-                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.86rem', color: 'var(--ink)' }}>
-                              {cohort.title}
-                            </span>
-                          </div>
-                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 800, color: cohort.badgeColor, background: '#ffffff', padding: '2px 8px', border: '1.5px solid var(--ink)', borderRadius: '3px', boxShadow: '1.5px 1.5px 0px var(--ink)' }}>
-                            ✓ PROTOCOL CALIBRATED
-                          </span>
-                        </div>
-
-                        {/* Clinical Rationale Text */}
-                        <p style={{ margin: '0 0 10px 0', fontSize: '0.82rem', lineHeight: 1.5, color: 'var(--ink-secondary)' }}>
-                          {cohort.clinicalRationale}
-                        </p>
-
-                        {/* Live Normative Baseline Preview Matrix */}
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-                            gap: 8,
-                            paddingTop: 8,
-                            borderTop: '1px dashed rgba(18, 24, 38, 0.2)',
-                          }}
-                        >
-                          <div style={{ background: '#ffffff', padding: '6px 8px', border: '1.5px solid var(--ink)', borderRadius: '3px' }}>
-                            <div style={{ fontSize: '0.62rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-muted)', textTransform: 'uppercase' }}>
-                              Social Attention
-                            </div>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.86rem', color: 'var(--blue-700)' }}>
-                              {cohort.norms.socialAttentionRatio.label}
-                            </div>
-                          </div>
-                          <div style={{ background: '#ffffff', padding: '6px 8px', border: '1.5px solid var(--ink)', borderRadius: '3px' }}>
-                            <div style={{ fontSize: '0.62rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-muted)', textTransform: 'uppercase' }}>
-                              Mean Fixation
-                            </div>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.86rem', color: 'var(--purple-700)' }}>
-                              {cohort.norms.avgFixationDuration.label}
-                            </div>
-                          </div>
-                          <div style={{ background: '#ffffff', padding: '6px 8px', border: '1.5px solid var(--ink)', borderRadius: '3px' }}>
-                            <div style={{ fontSize: '0.62rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-muted)', textTransform: 'uppercase' }}>
-                              Blink Frequency
-                            </div>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.86rem', color: 'var(--orange-600)' }}>
-                              {cohort.norms.blinkRate.label}
-                            </div>
-                          </div>
-                          <div style={{ background: '#ffffff', padding: '6px 8px', border: '1.5px solid var(--ink)', borderRadius: '3px' }}>
-                            <div style={{ fontSize: '0.62rem', fontFamily: 'var(--font-mono)', color: 'var(--ink-muted)', textTransform: 'uppercase' }}>
-                              Saccade Rate
-                            </div>
-                            <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.86rem', color: 'var(--green-700)' }}>
-                              {cohort.norms.saccadeFrequency.label}
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        style={{
-                          marginTop: 6,
-                          padding: '10px 14px',
-                          borderRadius: '4px',
-                          border: '2px dashed var(--red-primary)',
-                          background: '#fef2f2',
-                          color: 'var(--red-primary)',
-                          fontSize: '0.82rem',
-                          fontFamily: 'var(--font-mono)',
-                          fontWeight: 700,
-                        }}
-                      >
-                        ⚠️ Please enter a valid age between 1 and 99 years to calibrate screening norms.
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                ) : isAgeEntered ? (
+                  <div
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: '4px',
+                      border: '2px dashed var(--red-primary)',
+                      background: '#fef2f2',
+                      color: 'var(--red-primary)',
+                      fontSize: '0.82rem',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 700,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <AlertTriangle size={14} color="var(--red-primary)" strokeWidth={2.5} />
+                      <span>Please enter a valid positive age between 1 and 99 years.</span>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </SpotlightCard>
 
@@ -503,20 +373,58 @@ export default function ConsentPage() {
             <SpotlightCard style={{ padding: '2rem', marginBottom: '2rem', background: '#fafaf9', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
               <div
                 style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.82rem',
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  color: 'var(--ink)',
-                  marginBottom: '1.25rem',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '1.25rem',
+                  flexWrap: 'wrap',
                   gap: 8,
                 }}
               >
-                <span style={{ width: 10, height: 10, background: 'var(--orange-500)', display: 'inline-block' }} />
-                Mandatory Declarations
+                <div
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    color: 'var(--ink)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <span style={{ width: 10, height: 10, background: 'var(--orange-500)', display: 'inline-block' }} />
+                  Mandatory Declarations
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextVal = !allConsented;
+                    setConsents({ camera: nextVal, noVideo: nextVal, notDiagnosis: nextVal, age: nextVal });
+                  }}
+                  style={{
+                    background: allConsented ? 'var(--green-100)' : '#ffffff',
+                    border: '1.5px solid var(--ink)',
+                    borderRadius: '3px',
+                    padding: '3px 10px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    color: 'var(--ink)',
+                    cursor: 'pointer',
+                    boxShadow: '1.5px 1.5px 0px var(--ink)',
+                  }}
+                >
+                  {allConsented ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <Check size={13} strokeWidth={3} />
+                      <span>All Accepted</span>
+                    </span>
+                  ) : (
+                    'Accept All (4)'
+                  )}
+                </button>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
