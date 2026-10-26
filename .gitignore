@@ -38,3 +38,14 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Pupil dataset and Python runtime
+*.mat
+server/.venv/
+training/data/
+__pycache__/
+*.pyc
+
+*.joblib
+server/artifacts/
+server/data/

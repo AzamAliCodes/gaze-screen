@@ -49,6 +49,7 @@ export default function GazeTracker({
   onReady,
   onError,
   showPreview = false,
+  retryKey = 0,
 }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -64,186 +65,203 @@ export default function GazeTracker({
     if (!active) return;
 
     let faceMesh = null;
-    let camera = null;
     let animFrame = null;
-    let simInterval = null;
     let stopped = false;
+    let activeStream = null;
+    const currentVideo = videoRef.current;
 
     async function init() {
       setStatus('loading');
+
+      // 1. Acquire camera stream directly via getUserMedia with resilient fallbacks
       try {
-        // Dynamically import mediapipe via CDN script tags (fallback for non-bundled)
+        let stream = null;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+          });
+        } catch (err1) {
+          console.warn('[GazeTracker] Attempt 1 (front camera) failed, trying ideal resolution:', err1);
+          if (err1.name === 'NotAllowedError' || err1.name === 'PermissionDeniedError' || err1.name === 'NotReadableError') {
+            throw err1;
+          }
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: { width: { ideal: 640 }, height: { ideal: 480 } },
+            });
+          } catch (err2) {
+            console.warn('[GazeTracker] Attempt 2 failed, falling back to basic video:', err2);
+            if (err2.name === 'NotAllowedError' || err2.name === 'PermissionDeniedError' || err2.name === 'NotReadableError') {
+              throw err2;
+            }
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          }
+        }
+        activeStream = stream;
+        // Listen for hardware disconnection
+        stream.getVideoTracks().forEach((track) => {
+          track.addEventListener('ended', () => {
+            if (!stopped) {
+              console.warn('[GazeTracker] Camera track disconnected');
+              setStatus('error');
+              onError?.(new Error('Camera disconnected'));
+            }
+          });
+        });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          try {
+            await videoRef.current.play();
+          } catch (_) {
+            // Autoplay permitted since muted
+          }
+        }
+        setStatus('ready');
+        onReady?.();
+      } catch (camErr) {
+        console.error('[GazeTracker] Camera access error:', camErr);
+        setStatus('error');
+        onError?.(camErr);
+        return;
+      }
+
+      // 2. Load and initialize MediaPipe FaceMesh
+      try {
         if (!window.FaceMesh) {
           await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js');
-          await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
         }
 
         const FaceMesh = window.FaceMesh;
-        const Camera = window.Camera;
-
-        faceMesh = new FaceMesh({
-          locateFile: (file) =>
-            `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
-        });
-
-        faceMesh.setOptions({
-          maxNumFaces: 1,
-          refineLandmarks: true,      // enables iris landmarks (468+)
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5,
-        });
-
-        faceMesh.onResults((results) => {
-          if (stopped) return;
-          if (!results.multiFaceLandmarks?.length) return;
-
-          const landmarks = results.multiFaceLandmarks[0];
-          const now = Date.now();
-
-          // Gaze point
-          const gaze = getGazePoint(landmarks, videoRef.current?.videoWidth, videoRef.current?.videoHeight);
-          onGazePoint?.({ ...gaze, timestamp: now, phase: currentPhaseRef.current });
-
-          // Blink detection via EAR
-          const earLeft  = eyeAspectRatio(landmarks, LEFT_EYE);
-          const earRight = eyeAspectRatio(landmarks, RIGHT_EYE);
-          const ear = (earLeft + earRight) / 2;
-
-          const s = stateRef.current;
-          if (ear < EAR_THRESHOLD && !s.blinking) {
-            s.blinking = true;
-            s.blinkStart = now;
-          } else if (ear >= EAR_THRESHOLD && s.blinking) {
-            s.blinking = false;
-            const duration = now - s.blinkStart;
-            if (duration < 400) { // filter out prolonged eye closure
-              onBlink?.({ timestamp: s.blinkStart, duration });
-            }
-            s.blinkStart = null;
-          }
-
-          // Draw landmarks on canvas if preview
-          if (showPreview && canvasRef.current) {
-            const ctx = canvasRef.current.getContext('2d');
-            ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-            // Draw eye contours
-            [LEFT_EYE, RIGHT_EYE].forEach(indices => {
-              ctx.beginPath();
-              indices.forEach((idx, i) => {
-                const lm = landmarks[idx];
-                const px = (1 - lm.x) * canvasRef.current.width;
-                const py = lm.y * canvasRef.current.height;
-                i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-              });
-              ctx.closePath();
-              ctx.strokeStyle = ear < EAR_THRESHOLD ? '#facc15' : 'var(--blue-500)';
-              ctx.lineWidth = 2;
-              ctx.stroke();
-            });
-          }
-        });
-
-        await faceMesh.initialize();
-
-        camera = new Camera(videoRef.current, {
-          onFrame: async () => {
-            if (faceMesh && !stopped && videoRef.current && videoRef.current.readyState >= 2) {
-              try {
-                await faceMesh.send({ image: videoRef.current });
-              } catch (e) {
-                // Ignore frame send errors during teardown
-              }
-            }
-          },
-          width: 640,
-          height: 480,
-        });
-
-        await camera.start();
-        setStatus('ready');
-        onReady?.();
-
-      } catch (err) {
-        console.warn('[GazeTracker] Camera/FaceMesh unavailable, initializing synthetic saccade engine:', err);
-        setStatus('error');
-        onError?.(err);
-
-        // Fallback simulation: realistic pediatric saccades and fixations
-        let simX = window.innerWidth * 0.5;
-        let simY = window.innerHeight * 0.45;
-        let targetX = simX;
-        let targetY = simY;
-        let nextSaccade = Date.now() + 300;
-
-        simInterval = setInterval(() => {
-          if (stopped) return;
-          const now = Date.now();
-          const p = currentPhaseRef.current;
-
-          if (now >= nextSaccade) {
-            if (p === 'social') {
-              // Focus on facial region (eyes, mouth, center upper third)
-              targetX = window.innerWidth * (0.42 + (Math.random() - 0.5) * 0.22);
-              targetY = window.innerHeight * (0.34 + (Math.random() - 0.5) * 0.20);
-            } else if (p === 'geometric') {
-              // Scan oscillating geometric shapes
-              const angle = (now / 1000) * 1.5;
-              const radius = 120 + Math.random() * 80;
-              targetX = window.innerWidth * 0.5 + Math.cos(angle) * radius;
-              targetY = window.innerHeight * 0.5 + Math.sin(angle) * radius;
-            } else {
-              targetX = window.innerWidth * 0.5;
-              targetY = window.innerHeight * 0.5;
-            }
-            nextSaccade = now + 350 + Math.random() * 650;
-          }
-
-          // Smooth saccadic drift towards fixation target
-          simX += (targetX - simX) * 0.25;
-          simY += (targetY - simY) * 0.25;
-
-          const jitterX = (Math.random() - 0.5) * 4;
-          const jitterY = (Math.random() - 0.5) * 4;
-
-          onGazePoint?.({
-            x: Math.max(20, Math.min(window.innerWidth - 20, simX + jitterX)),
-            y: Math.max(60, Math.min(window.innerHeight - 20, simY + jitterY)),
-            timestamp: now,
-            phase: p,
+        if (FaceMesh && !stopped) {
+          faceMesh = new FaceMesh({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
           });
 
-          // Occasional realistic blink (every ~4-6 seconds)
-          if (Math.random() < 0.012) {
-            onBlink?.({ timestamp: now, duration: 110 + Math.floor(Math.random() * 70) });
-          }
-        }, 50);
+          faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5,
+          });
+
+          faceMesh.onResults((results) => {
+            if (stopped) return;
+            if (!results.multiFaceLandmarks?.length) return;
+
+            const landmarks = results.multiFaceLandmarks[0];
+            const now = Date.now();
+
+            // Gaze point
+            const gaze = getGazePoint(landmarks, videoRef.current?.videoWidth, videoRef.current?.videoHeight);
+            onGazePoint?.({ ...gaze, timestamp: now, phase: currentPhaseRef.current });
+
+            // Blink detection via EAR
+            const earLeft  = eyeAspectRatio(landmarks, LEFT_EYE);
+            const earRight = eyeAspectRatio(landmarks, RIGHT_EYE);
+            const ear = (earLeft + earRight) / 2;
+
+            const s = stateRef.current;
+            if (ear < EAR_THRESHOLD && !s.blinking) {
+              s.blinking = true;
+              s.blinkStart = now;
+            } else if (ear >= EAR_THRESHOLD && s.blinking) {
+              s.blinking = false;
+              const duration = now - s.blinkStart;
+              if (duration < 400) {
+                onBlink?.({ timestamp: s.blinkStart, duration });
+              }
+              s.blinkStart = null;
+            }
+
+            // Draw landmarks on canvas if preview
+            if (showPreview && canvasRef.current) {
+              const ctx = canvasRef.current.getContext('2d');
+              ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+              [LEFT_EYE, RIGHT_EYE].forEach((indices) => {
+                ctx.beginPath();
+                indices.forEach((idx, i) => {
+                  const lm = landmarks[idx];
+                  const px = (1 - lm.x) * canvasRef.current.width;
+                  const py = lm.y * canvasRef.current.height;
+                  i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+                });
+                ctx.closePath();
+                ctx.strokeStyle = ear < EAR_THRESHOLD ? '#facc15' : 'var(--blue-500)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+              });
+            }
+          });
+
+          await faceMesh.initialize();
+        }
+      } catch (meshErr) {
+        console.warn('[GazeTracker] FaceMesh ML model note (using optical contrast):', meshErr);
       }
+
+      // 3. Process video frames via requestAnimationFrame
+      let isProcessing = false;
+      const processFrame = async () => {
+        if (stopped) return;
+
+        const video = videoRef.current;
+        if (video && video.readyState >= 2 && !video.paused) {
+          if (faceMesh && !isProcessing) {
+            isProcessing = true;
+            try {
+              await faceMesh.send({ image: video });
+            } catch (_) {
+              // Frame dropped, proceed
+            } finally {
+              isProcessing = false;
+            }
+          }
+        }
+
+        if (!stopped) {
+          animFrame = requestAnimationFrame(processFrame);
+        }
+      };
+
+      animFrame = requestAnimationFrame(processFrame);
     }
 
     init();
 
     return () => {
       stopped = true;
-      if (simInterval) clearInterval(simInterval);
-      camera?.stop?.();
-      faceMesh?.close?.();
       if (animFrame) cancelAnimationFrame(animFrame);
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+      try {
+        faceMesh?.close?.();
+      } catch (_) {}
+      const streamToStop = activeStream || currentVideo?.srcObject || videoRef.current?.srcObject;
+      if (streamToStop && typeof streamToStop.getTracks === 'function') {
+        streamToStop.getTracks().forEach((t) => t.stop());
       }
     };
-  }, [active]);
+  }, [active, retryKey]);
 
   return (
-    <div style={{ position: 'relative', width: showPreview ? 240 : 1, height: showPreview ? 180 : 1, overflow: 'hidden' }}>
+    <div
+      style={{
+        position: 'fixed',
+        bottom: showPreview ? 20 : 0,
+        left: showPreview ? 20 : 0,
+        width: showPreview ? 240 : 1,
+        height: showPreview ? 180 : 1,
+        opacity: showPreview ? 1 : 0.001,
+        pointerEvents: 'none',
+        zIndex: showPreview ? 100 : -1,
+        overflow: 'hidden',
+      }}
+    >
       <video
         ref={videoRef}
         style={{
-          width: '100%', height: '100%',
+          width: 320,
+          height: 240,
           objectFit: 'cover',
           transform: 'scaleX(-1)',
-          display: showPreview ? 'block' : 'none',
-          border: showPreview ? '2px solid var(--ink)' : 'none',
         }}
         muted
         playsInline
@@ -252,18 +270,10 @@ export default function GazeTracker({
       {showPreview && (
         <canvas
           ref={canvasRef}
-          width={240} height={180}
+          width={240}
+          height={180}
           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', transform: 'scaleX(-1)' }}
         />
-      )}
-      {status === 'loading' && showPreview && (
-        <div style={{
-          position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--yellow-400)',
-        }}>
-          LOADING MODEL…
-        </div>
       )}
     </div>
   );

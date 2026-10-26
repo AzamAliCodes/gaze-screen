@@ -29,7 +29,7 @@ export function CounterCard({ value, label, unit = '', color = 'var(--ink)', del
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: delay + 0.15, type: 'spring', stiffness: 300, damping: 20 }}
         >
-          {value != null ? (typeof value === 'number' ? value.toFixed(typeof value === 'integer' ? 0 : 1) : value) : '—'}
+          {value != null ? (typeof value === 'number' ? value.toFixed(Number.isInteger(value) ? 0 : 1) : value) : '—'}
         </motion.span>
         {unit && <span style={{ fontSize: '0.95rem', color: 'var(--ink-muted)', marginLeft: 3 }}>{unit}</span>}
       </div>

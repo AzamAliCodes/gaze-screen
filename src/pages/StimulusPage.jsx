@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AlertTriangle, RotateCcw, Eye, Music, Volume2, VolumeX, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import PageTransition from '../components/PageTransition';
 import StimulusPlayer from '../components/StimulusPlayer';
 import GazeTracker from '../components/GazeTracker';
@@ -8,6 +9,7 @@ import { LiveDot } from '../components/UI';
 import { useSession } from '../context/SessionContext';
 import { TOTAL_STIMULUS_DURATION } from '../lib/stimulus';
 import soundEngine from '../lib/soundEngine';
+import { deriveMetrics, computeRiskScore } from '../lib/classifier';
 
 export default function StimulusPage() {
   const navigate = useNavigate();
@@ -20,8 +22,9 @@ export default function StimulusPage() {
   const [trackerReady, setTrackerReady] = useState(false);
   const [trackerError, setTrackerError] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(2);
   const [showCountdown, setShowCountdown] = useState(true);
+  const [retryKey, setRetryKey] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isMuted, setIsMuted] = useState(soundEngine.isMuted);
   const [audioRunning, setAudioRunning] = useState(soundEngine.isAudioRunning());
@@ -31,7 +34,7 @@ export default function StimulusPage() {
   const [gazeHistory, setGazeHistory] = useState([]);
   const [blinkFlash, setBlinkFlash] = useState(false);
   const [lastBlinkDuration, setLastBlinkDuration] = useState(null);
-  const [radarExpanded, setRadarExpanded] = useState(true);
+  const [radarExpanded, setRadarExpanded] = useState(false);
   const [saccadeVelocity, setSaccadeVelocity] = useState(0);
 
   const startTimeRef = useRef(null);
@@ -64,7 +67,13 @@ export default function StimulusPage() {
     };
   }, []);
 
+  // Countdown advances ONLY when optical camera tracking is verified ready and online
   useEffect(() => {
+    // If camera is offline or still initializing, freeze countdown and DO NOT start!
+    if (trackerError || !trackerReady) {
+      return;
+    }
+
     if (countdown <= 0) {
       setShowCountdown(false);
       setSessionStarted(true);
@@ -74,7 +83,15 @@ export default function StimulusPage() {
     }
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
-  }, [countdown, updateSession]);
+  }, [countdown, trackerReady, trackerError, updateSession]);
+
+  // If camera goes offline mid-session, halt test immediately to protect measurement validity
+  useEffect(() => {
+    if (trackerError && sessionStarted) {
+      setSessionStarted(false);
+      soundEngine.stopMelody();
+    }
+  }, [trackerError, sessionStarted]);
 
   // Ambient Sound & Melody Lifecycle
   useEffect(() => {
@@ -100,8 +117,12 @@ export default function StimulusPage() {
     soundEngine.setPhase(newPhase);
   }, []);
 
+  const gazePointsRef = useRef(session.gazePoints || []);
+  const blinkEventsRef = useRef(session.blinkEvents || []);
+
   const handleGazePoint = useCallback(
     (point) => {
+      gazePointsRef.current.push(point);
       addGazePoint(point);
       setGazeCount((c) => c + 1);
       setLiveGaze({ x: point.x, y: point.y });
@@ -129,6 +150,7 @@ export default function StimulusPage() {
 
   const handleBlink = useCallback(
     (event) => {
+      blinkEventsRef.current.push(event);
       addBlinkEvent(event);
       setBlinkCount((c) => c + 1);
       setLastBlinkDuration(event.duration || 135);
@@ -139,23 +161,105 @@ export default function StimulusPage() {
     [addBlinkEvent]
   );
 
-  // Smooth completion handler
+  // Bulletproof completion handler
   const handleComplete = useCallback(() => {
-    if (isCompleting) return;
-    setIsCompleting(true);
-    soundEngine.stopMelody();
-    soundEngine.playCompletionFanfare();
+    try {
+      // 1. Immediately halt all audio and background tracking
+      soundEngine.stopAudio();
+      setShowCountdown(false);
+      setIsCompleting(true);
+      setSessionStarted(false);
 
-    const duration = startTimeRef.current ? (Date.now() - startTimeRef.current) / 1000 : 60;
-    updateSession({ completedAt: Date.now(), totalDuration: duration });
+      const duration = startTimeRef.current ? Math.max(1, (Date.now() - startTimeRef.current) / 1000) : 60;
+      const age = session.childAge || 4;
+      const gazeData = gazePointsRef.current.length > 0 ? gazePointsRef.current : (session.gazePoints || []);
+      const blinkData = blinkEventsRef.current.length > 0 ? blinkEventsRef.current : (session.blinkEvents || []);
 
-    setTimeout(() => {
-      navigate('/analysis');
-    }, 600);
-  }, [isCompleting, navigate, updateSession]);
+      let metrics, result;
+      try {
+        metrics = deriveMetrics(gazeData, blinkData, duration, age);
+        result = computeRiskScore(metrics, age);
+      } catch (calcErr) {
+        console.error('[StimulusPage] Metric calculation note:', calcErr);
+        metrics = { hasData: false, sampleCount: gazeData.length };
+        result = { level: 'unobserved', score: null, adhdScore: null, adhdLevel: 'unobserved' };
+      }
+
+      updateSession({
+        completedAt: Date.now(),
+        totalDuration: duration,
+        gazePoints: gazeData,
+        blinkEvents: blinkData,
+        metrics,
+        riskLevel: result.level,
+        riskScore: result.score,
+        adhdScore: result.adhdScore,
+        adhdLevel: result.adhdLevel,
+        adhdProbability: result.adhdProbability,
+        asdScore: result.asdScore,
+        asdLevel: result.asdLevel,
+        breakdown: result.breakdown,
+        cohort: result.cohort,
+        cohortId: result.cohortId,
+        completed: true,
+      });
+
+      window.scrollTo(0, 0);
+      try {
+        navigate('/report', { replace: true });
+      } catch (navErr) {
+        window.location.replace('/report');
+      }
+    } catch (err) {
+      console.error('[StimulusPage] handleComplete error:', err);
+      window.scrollTo(0, 0);
+      try {
+        navigate('/report', { replace: true });
+      } catch (_) {
+        window.location.replace('/report');
+      }
+    }
+  }, [navigate, session.childAge, session.gazePoints, session.blinkEvents, updateSession]);
 
   const elapsed = Math.round(progress * (TOTAL_STIMULUS_DURATION / 1000));
   const totalSec = Math.round(TOTAL_STIMULUS_DURATION / 1000);
+
+  // If completing, halt all heavy canvas animations and camera immediately
+  if (isCompleting) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          background: '#0a0a0a',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 16,
+          color: '#ffffff',
+          textAlign: 'center',
+          padding: '2rem',
+        }}
+      >
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            border: '4px solid var(--yellow-300)',
+            borderTopColor: 'transparent',
+            animation: 'spin 0.7s linear infinite',
+          }}
+        />
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.2rem', fontWeight: 900, color: 'var(--yellow-300)' }}>
+          STOPPING SENSORS & GENERATING REPORT…
+        </div>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.82rem', color: '#94a3b8' }}>
+          Finalizing oculomotor gaze telemetry…
+        </p>
+      </div>
+    );
+  }
 
   // Determine current region of interest (ROI) from gaze position
   const currentROI = useMemo(() => {
@@ -180,7 +284,7 @@ export default function StimulusPage() {
   return (
     <PageTransition>
       <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
-        {/* Countdown Overlay */}
+        {/* Countdown & Camera Readiness Overlay */}
         <AnimatePresence>
           {showCountdown && (
             <motion.div
@@ -196,161 +300,255 @@ export default function StimulusPage() {
                 justifyContent: 'center',
                 flexDirection: 'column',
                 gap: 16,
+                padding: '1.5rem',
               }}
-              onPointerDown={() => soundEngine.resumeContext()}
-              onClick={() => soundEngine.resumeContext()}
-            >
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                <span className="brutal-tag tag-blue">OPTICAL SENSORS SYNCHRONIZED</span>
-                <span className="brutal-tag tag-yellow">60s PROTOCOL</span>
-                <span className="brutal-tag tag-green">🎵 AUDIO MELODY READY</span>
-              </div>
-              <motion.div
-                key={countdown}
-                initial={{ scale: 1.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.6, opacity: 0 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '9rem',
-                  fontWeight: 900,
-                  color: 'var(--orange-500)',
-                  lineHeight: 1,
-                  textShadow: '5px 5px 0px var(--ink)',
-                }}
-              >
-                {countdown === 0 ? 'START' : countdown}
-              </motion.div>
-              <div
-                style={{
-                  color: 'var(--ink)',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.96rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.04em',
-                  background: '#ffffff',
-                  padding: '6px 16px',
-                  border: '2px solid var(--ink)',
-                  borderRadius: '3px',
-                  boxShadow: '3px 3px 0px var(--ink)',
-                }}
-              >
-                {session.childName ? `${session.childName}, watch the shapes on screen!` : 'Please direct child’s attention to screen'}
-              </div>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.78rem',
-                  fontWeight: 700,
-                  color: 'var(--ink-secondary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                }}
-              >
-                <span>🎵 ADHD Deep Focus & Relief music ready (tap anywhere if muted)</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Smooth Completion Transition Overlay */}
-        <AnimatePresence>
-          {isCompleting && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35 }}
-              style={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: 120,
-                background: 'rgba(255, 255, 255, 0.97)',
-                backdropFilter: 'blur(10px)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 20,
+              onPointerDown={() => {
+                soundEngine.resumeContext();
+                if (trackerReady && !trackerError) {
+                  setShowCountdown(false);
+                  setSessionStarted(true);
+                  startTimeRef.current = Date.now();
+                  updateSession({ startedAt: Date.now() });
+                }
+              }}
+              onClick={() => {
+                soundEngine.resumeContext();
+                if (trackerReady && !trackerError) {
+                  setShowCountdown(false);
+                  setSessionStarted(true);
+                  startTimeRef.current = Date.now();
+                  updateSession({ startedAt: Date.now() });
+                }
               }}
             >
-              <div style={{ position: 'relative', width: 80, height: 80 }}>
-                {/* Outer rotating multi-color ring */}
+              {trackerError ? (
+                /* Camera Offline Warning Card — Blocks Start Completely */
                 <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
                   style={{
-                    position: 'absolute',
-                    inset: 0,
-                    borderRadius: '50%',
-                    border: '4px dashed var(--blue-600)',
+                    background: '#fee2e2',
+                    border: '3px solid var(--ink)',
+                    boxShadow: '6px 6px 0px var(--ink)',
+                    borderRadius: '4px',
+                    padding: '28px 32px',
+                    maxWidth: 520,
+                    width: '100%',
+                    textAlign: 'center',
                   }}
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                />
-                {/* Inner counter-rotating ring */}
-                <motion.div
-                  style={{
-                    position: 'absolute',
-                    inset: 8,
-                    borderRadius: '50%',
-                    border: '3px solid var(--orange-500)',
-                    borderTopColor: 'transparent',
-                  }}
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                />
-              </div>
-
-              <div style={{ textAlign: 'center' }}>
-                <span className="brutal-tag tag-blue" style={{ marginBottom: 8, display: 'inline-block' }}>
-                  SESSION CONCLUDED
-                </span>
-                <h2
-                  style={{
-                    fontFamily: 'var(--font-heading)',
-                    fontSize: '1.75rem',
-                    fontWeight: 900,
-                    color: 'var(--ink)',
-                    margin: '6px 0 4px',
-                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
                 >
-                  Generating Biomarker Report
-                </h2>
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.86rem', color: 'var(--ink-secondary)', margin: 0 }}>
-                  Synthesizing {gazeCount.toLocaleString()} gaze telemetry vectors and blink rates…
-                </p>
-              </div>
-
-              <div
-                style={{
-                  width: 260,
-                  height: 8,
-                  background: '#e2e8f0',
-                  border: '1.5px solid var(--ink)',
-                  borderRadius: '4px',
-                  overflow: 'hidden',
-                }}
-              >
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fee2e2', border: '2.5px solid var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '3px 3px 0px var(--ink)' }}>
+                      <AlertTriangle size={30} color="var(--red-primary)" strokeWidth={2.5} />
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '1.35rem',
+                      fontWeight: 900,
+                      color: 'var(--red-primary)',
+                      marginBottom: 10,
+                      letterSpacing: '0.02em',
+                    }}
+                  >
+                    CAMERA OFFLINE — TEST CANNOT START
+                  </div>
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.92rem',
+                      color: 'var(--ink-secondary)',
+                      marginBottom: 22,
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    Optical gaze tracking requires live front-camera video to measure involuntary fixations and blink rates. The screening test will not start without active camera permissions.
+                  </p>
+                  <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => {
+                        setTrackerError(false);
+                        setTrackerReady(false);
+                        setRetryKey((k) => k + 1);
+                      }}
+                      className="brutal-btn btn-primary"
+                      style={{
+                        padding: '10px 18px',
+                        fontSize: '0.85rem',
+                        fontWeight: 800,
+                        background: 'var(--blue-600)',
+                        color: '#ffffff',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <RotateCcw size={13} strokeWidth={2.5} />
+                      <span>Retry Camera</span>
+                    </button>
+                    <button
+                      onClick={() => navigate('/calibration')}
+                      className="brutal-btn btn-outline"
+                      style={{
+                        padding: '10px 16px',
+                        fontSize: '0.85rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ← Calibration
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleComplete();
+                      }}
+                      className="brutal-btn"
+                      style={{
+                        padding: '10px 16px',
+                        fontSize: '0.85rem',
+                        fontWeight: 800,
+                        background: 'var(--yellow-300)',
+                        border: '2px solid var(--ink)',
+                        boxShadow: '2px 2px 0px var(--ink)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Finish & View Report →
+                    </button>
+                  </div>
+                </motion.div>
+              ) : !trackerReady ? (
+                /* Camera Initializing State */
                 <motion.div
-                  style={{ height: '100%', background: 'linear-gradient(90deg, var(--blue-600), var(--orange-500))' }}
-                  initial={{ width: '10%' }}
-                  animate={{ width: '100%' }}
-                  transition={{ duration: 0.85, ease: 'easeInOut' }}
-                />
-              </div>
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    background: '#ffffff',
+                    border: '3px solid var(--ink)',
+                    boxShadow: '6px 6px 0px var(--ink)',
+                    borderRadius: '4px',
+                    padding: '28px 32px',
+                    maxWidth: 480,
+                    width: '100%',
+                    textAlign: 'center',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <motion.div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      border: '3.5px solid var(--blue-600)',
+                      borderTopColor: 'transparent',
+                      margin: '0 auto 16px',
+                    }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  />
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '1.18rem',
+                      fontWeight: 900,
+                      color: 'var(--ink)',
+                      marginBottom: 8,
+                    }}
+                  >
+                    CONNECTING OPTICAL SENSORS…
+                  </div>
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.88rem',
+                      color: 'var(--ink-secondary)',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Waiting for front-camera feed. The 60-second assessment will automatically initiate as soon as camera tracking is online.
+                  </p>
+                </motion.div>
+              ) : (
+                /* Camera Ready -> Verified Live Countdown */
+                <>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <span className="brutal-tag tag-green">● TRACKING LIVE & VERIFIED</span>
+                    <span className="brutal-tag tag-yellow">60s PROTOCOL</span>
+                    <span className="brutal-tag tag-green" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <Music size={11} strokeWidth={2.5} /> AUDIO MELODY READY
+                    </span>
+                  </div>
+                  <motion.div
+                    key={countdown}
+                    initial={{ scale: 1.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.6, opacity: 0 }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 'clamp(4.5rem, 20vw, 8.5rem)',
+                      fontWeight: 900,
+                      color: 'var(--orange-500)',
+                      lineHeight: 1,
+                      textShadow: '5px 5px 0px var(--ink)',
+                    }}
+                  >
+                    {countdown === 0 ? 'START' : countdown}
+                  </motion.div>
+                  <div
+                    style={{
+                      color: 'var(--ink)',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.96rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.04em',
+                      background: '#ffffff',
+                      padding: '6px 16px',
+                      border: '2px solid var(--ink)',
+                      borderRadius: '3px',
+                      boxShadow: '3px 3px 0px var(--ink)',
+                    }}
+                  >
+                    {session.childName ? `${session.childName}, watch the shapes on screen!` : 'Please direct child’s attention to screen'}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      color: 'var(--ink-secondary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <Music size={12} strokeWidth={2.5} />
+                      <span>ADHD Deep Focus & Relief music ready (tap anywhere if muted)</span>
+                    </span>
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Minimalist Brutalist Top HUD */}
+        {/* Minimalist Brutalist Top HUD (Always on Top) */}
         <div
           style={{
             position: 'fixed',
             top: 0,
             left: 0,
             right: 0,
-            zIndex: 50,
+            zIndex: 200,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -373,38 +571,10 @@ export default function StimulusPage() {
                 borderRadius: '3px',
               }}
             >
-              <LiveDot color={trackerReady ? 'var(--green-600)' : trackerError ? 'var(--blue-600)' : 'var(--amber-primary)'} />
+              <LiveDot color={trackerReady ? 'var(--green-600)' : trackerError ? 'var(--red-primary)' : 'var(--amber-primary)'} />
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', fontWeight: 800, color: 'var(--ink)' }}>
-                {trackerReady ? 'TRACKING LIVE' : trackerError ? 'SIMULATED TELEMETRY' : 'INITIALIZING…'}
+                {trackerReady ? 'TRACKING LIVE' : trackerError ? 'CAMERA OFFLINE' : 'INITIALIZING…'}
               </span>
-
-              {/* Multi-Color Chromatic Frequency Equalizer Bars */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 2.5, height: 14, marginLeft: 2 }}>
-                {[
-                  { color: '#2563eb', scale: 0.9 },
-                  { color: '#7c3aed', scale: 0.55 },
-                  { color: '#f59e0b', scale: 1.0 },
-                  { color: '#10b981', scale: 0.7 },
-                  { color: '#06b6d4', scale: 0.45 },
-                ].map((bar, i) => (
-                  <motion.div
-                    key={i}
-                    style={{
-                      width: 2.5,
-                      background: bar.color,
-                      borderRadius: 1,
-                    }}
-                    animate={{
-                      height: (trackerReady || trackerError) ? [4, 14 * bar.scale, 5, 12 * bar.scale, 4] : [2, 2],
-                    }}
-                    transition={{
-                      duration: 0.8 + i * 0.14,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }}
-                  />
-                ))}
-              </div>
             </div>
 
             <span
@@ -437,7 +607,7 @@ export default function StimulusPage() {
                     boxShadow: '2px 2px 0px var(--ink)',
                   }}
                 >
-                  <span style={{ fontSize: '0.85rem', lineHeight: 1 }}>👁</span>
+                  <Eye size={13} strokeWidth={2.5} />
                   <span>BLINK {lastBlinkDuration ? `${lastBlinkDuration}ms` : 'DETECTED'}</span>
                 </motion.div>
               )}
@@ -467,8 +637,9 @@ export default function StimulusPage() {
           </div>
 
           {/* Metric Badges & Complete Button */}
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div
+              className="hud-hide-mobile"
               style={{
                 textAlign: 'right',
                 background: '#eff6ff',
@@ -487,6 +658,7 @@ export default function StimulusPage() {
             </div>
 
             <div
+              className="hud-hide-mobile"
               style={{
                 textAlign: 'right',
                 background: '#fff7ed',
@@ -527,98 +699,42 @@ export default function StimulusPage() {
               onMouseEnter={(e) => (e.currentTarget.style.transform = 'translate(-1px, -1px)')}
               onMouseLeave={(e) => (e.currentTarget.style.transform = 'translate(0, 0)')}
             >
-              <span style={{ fontSize: '0.85rem' }}>{isMuted ? '🔇' : !audioRunning ? '🔊' : '🎵'}</span>
-              <span>{isMuted ? 'ADHD MUSIC: OFF' : !audioRunning ? 'PLAY ADHD MUSIC' : 'ADHD MUSIC: ON'}</span>
-
-              {/* Animated audio wave bars when playing */}
-              {!isMuted && audioRunning && sessionStarted && !isCompleting && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 2, height: 11, marginLeft: 2 }}>
-                  {[0.7, 1.0, 0.6].map((scale, i) => (
-                    <motion.div
-                      key={i}
-                      style={{ width: 2.5, background: '#10b981', borderRadius: 1 }}
-                      animate={{ height: [3, 11 * scale, 3] }}
-                      transition={{ duration: 0.5 + i * 0.14, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                  ))}
-                </div>
-              )}
+              {isMuted ? <VolumeX size={13} strokeWidth={2.5} /> : !audioRunning ? <Volume2 size={13} strokeWidth={2.5} /> : <Music size={13} strokeWidth={2.5} />}
+              <span>{isMuted ? 'MUSIC OFF' : !audioRunning ? 'PLAY MUSIC' : 'MUSIC ON'}</span>
             </button>
 
             {/* Complete Test & View Report Early Button */}
             <button
-              onClick={handleComplete}
-              disabled={isCompleting}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleComplete();
+              }}
               style={{
                 background: 'var(--yellow-300)',
                 color: 'var(--ink)',
                 border: '2px solid var(--ink)',
                 borderRadius: '3px',
-                padding: '5px 12px',
+                padding: '6px 14px',
                 fontFamily: 'var(--font-mono)',
-                fontSize: '0.72rem',
+                fontSize: '0.74rem',
                 fontWeight: 900,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 5,
+                gap: 6,
                 boxShadow: '2.5px 2.5px 0px var(--ink)',
                 transition: 'all 0.15s ease',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.transform = 'translate(-1px, -1px)')}
               onMouseLeave={(e) => (e.currentTarget.style.transform = 'translate(0, 0)')}
             >
-              <span>✓</span>
+              <Check size={14} strokeWidth={3} />
               <span>FINISH & VIEW REPORT</span>
             </button>
           </div>
         </div>
-
-        {/* Floating Autoplay Audio Unblock Banner */}
-        <AnimatePresence>
-          {sessionStarted && !audioRunning && !isMuted && !isCompleting && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              style={{
-                position: 'fixed',
-                top: 56,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 60,
-              }}
-            >
-              <button
-                onClick={() => {
-                  soundEngine.resumeAudio();
-                  soundEngine.playTestTone();
-                }}
-                style={{
-                  background: 'var(--yellow-300)',
-                  color: 'var(--ink)',
-                  border: '2px solid var(--ink)',
-                  borderRadius: '3px',
-                  boxShadow: '3px 3px 0px var(--ink)',
-                  padding: '5px 14px',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.74rem',
-                  fontWeight: 900,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                <span>🔊</span>
-                <span>BROWSER AUDIO PAUSED — CLICK ANYWHERE TO PLAY ADHD FOCUS MUSIC</span>
-                <span className="brutal-tag tag-blue" style={{ fontSize: '0.62rem', padding: '1px 5px' }}>
-                  PLAY
-                </span>
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Clean Stimulus Canvas Area (Unobstructed View for Child) */}
         <div style={{ position: 'fixed', inset: '56px 0 9px 0' }}>
@@ -688,13 +804,13 @@ export default function StimulusPage() {
                 background: 'none',
                 border: 'none',
                 padding: '0 4px',
-                fontSize: '0.72rem',
-                fontWeight: 900,
                 cursor: 'pointer',
                 color: 'var(--ink)',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              {radarExpanded ? '▼' : '▲'}
+              {radarExpanded ? <ChevronDown size={14} strokeWidth={2.5} /> : <ChevronUp size={14} strokeWidth={2.5} />}
             </button>
           </div>
 
@@ -903,14 +1019,144 @@ export default function StimulusPage() {
           )}
         </div>
 
-        {/* Gaze Tracker (Runs locally in background) */}
+        {/* Camera Offline Interruption Modal (Mid-Screening Protection) */}
+        <AnimatePresence>
+          {trackerError && !showCountdown && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 150,
+                background: 'rgba(10, 10, 10, 0.88)',
+                backdropFilter: 'blur(5px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1.5rem',
+              }}
+            >
+              <div
+                style={{
+                  background: '#fee2e2',
+                  border: '3px solid var(--ink)',
+                  boxShadow: '6px 6px 0px var(--ink)',
+                  borderRadius: '4px',
+                  padding: '28px 32px',
+                  maxWidth: 500,
+                  width: '100%',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fee2e2', border: '2.5px solid var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '3px 3px 0px var(--ink)' }}>
+                    <AlertTriangle size={30} color="var(--red-primary)" strokeWidth={2.5} />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '1.3rem',
+                    fontWeight: 900,
+                    color: 'var(--red-primary)',
+                    marginBottom: 10,
+                  }}
+                >
+                  SCREENING PAUSED — CAMERA OFFLINE
+                </div>
+                <p
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '0.92rem',
+                    color: 'var(--ink-secondary)',
+                    marginBottom: 20,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Front-camera tracking was interrupted. The test timer and stimulus animation have been paused so the assessment results remain clinically valid.
+                </p>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => {
+                      setTrackerError(false);
+                      setTrackerReady(false);
+                      setRetryKey((k) => k + 1);
+                    }}
+                    className="brutal-btn btn-primary"
+                    style={{
+                      padding: '10px 18px',
+                      fontSize: '0.85rem',
+                      fontWeight: 800,
+                      background: 'var(--blue-600)',
+                      color: '#ffffff',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <RotateCcw size={13} strokeWidth={2.5} />
+                    <span>Reconnect Camera & Resume</span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/calibration')}
+                    className="brutal-btn btn-outline"
+                    style={{
+                      padding: '10px 16px',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Exit to Calibration
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleComplete();
+                    }}
+                    className="brutal-btn"
+                    style={{
+                      padding: '10px 16px',
+                      fontSize: '0.85rem',
+                      fontWeight: 800,
+                      background: 'var(--yellow-300)',
+                      border: '2px solid var(--ink)',
+                      boxShadow: '2px 2px 0px var(--ink)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Finish & View Report →
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Gaze Tracker (Runs locally on-device in background) */}
         <GazeTracker
-          active={sessionStarted}
+          active={true}
+          retryKey={retryKey}
           currentPhase={phase?.phase || 'social'}
           onGazePoint={handleGazePoint}
           onBlink={handleBlink}
-          onReady={() => setTrackerReady(true)}
-          onError={() => setTrackerError(true)}
+          onReady={() => {
+            setTrackerReady(true);
+            setTrackerError(false);
+            if (!showCountdown) {
+              setSessionStarted(true);
+            }
+          }}
+          onError={() => {
+            setTrackerReady(false);
+            setTrackerError(true);
+            setSessionStarted(false);
+          }}
           showPreview={false}
         />
 

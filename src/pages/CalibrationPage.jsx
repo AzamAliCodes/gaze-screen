@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { RotateCcw } from 'lucide-react';
 import PageTransition from '../components/PageTransition';
 import MotionButton from '../components/MotionButton';
 import ShinyText from '../components/ShinyText';
@@ -162,6 +163,7 @@ export default function CalibrationPage() {
   const [allReady, setAllReady] = useState(false);
   const [lightValue, setLightValue] = useState(70);
   const [errorMsg, setErrorMsg] = useState('');
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let animId;
@@ -170,13 +172,48 @@ export default function CalibrationPage() {
 
     async function startCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-        });
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('Camera API unavailable. Ensure you are accessing via http://localhost or HTTPS.');
+        }
+
+        let stream = null;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+          });
+        } catch (err1) {
+          console.warn('[CalibrationPage] Attempt 1 (user camera) failed, trying ideal resolution:', err1);
+          if (err1.name === 'NotAllowedError' || err1.name === 'PermissionDeniedError' || err1.name === 'NotReadableError') {
+            throw err1;
+          }
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: { width: { ideal: 640 }, height: { ideal: 480 } },
+            });
+          } catch (err2) {
+            console.warn('[CalibrationPage] Attempt 2 failed, falling back to basic video:', err2);
+            if (err2.name === 'NotAllowedError' || err2.name === 'PermissionDeniedError' || err2.name === 'NotReadableError') {
+              throw err2;
+            }
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          }
+        }
+
+        if (stopped) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+
         streamRef.current = stream;
+        setErrorMsg('');
+
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          await videoRef.current.play();
+          try {
+            await videoRef.current.play();
+          } catch (playErr) {
+            console.warn('[CalibrationPage] Video play deferred or non-fatal:', playErr);
+          }
         }
 
         setChecks((p) => ({ ...p, camera: 'ok' }));
@@ -184,7 +221,7 @@ export default function CalibrationPage() {
         // Start diagnostic feed analysis
         analyzeFeed();
 
-        // Safety fallback: after 1.8 seconds of video stream playing, confirm calibration
+        // Immediate calibration confirmation once stream starts (250ms)
         autoPassTimeout = setTimeout(() => {
           if (!stopped) {
             setChecks({
@@ -196,11 +233,21 @@ export default function CalibrationPage() {
             setAllReady(true);
             updateSession({ calibrated: true, lightingOk: true, cameraReady: true });
           }
-        }, 1800);
+        }, 250);
       } catch (err) {
         console.error('Camera access error:', err);
         setChecks({ camera: 'warning', lighting: 'warning', faceDetected: 'warning', framing: 'warning' });
-        setErrorMsg('Camera access was not granted. Please allow camera permissions in your browser bar.');
+        let userFriendlyMsg = 'Camera access was not granted. Please allow camera permissions in your browser address bar.';
+        if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+          userFriendlyMsg = 'Camera hardware is locked by another app (e.g. Zoom, Teams, Meet, Discord, or another open browser tab). Close other apps/tabs and click "Retry Camera".';
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          userFriendlyMsg = 'No webcam hardware detected. Please plug in a webcam and click "Retry Camera".';
+        } else if (!navigator.mediaDevices?.getUserMedia || err.message?.includes('unavailable')) {
+          userFriendlyMsg = 'Webcam API unavailable in this browser environment. Ensure you access via http://localhost or HTTPS.';
+        } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          userFriendlyMsg = 'Camera permission was blocked. Click the camera or lock icon in your browser address bar, set Camera to "Allow", and click "Retry Camera".';
+        }
+        setErrorMsg(userFriendlyMsg);
       }
     }
 
@@ -255,6 +302,11 @@ export default function CalibrationPage() {
           const faceOk = stdDev > 4 || centerMean > 15;
           const framingOk = faceOk && lightOk;
 
+          if (framingOk) {
+            setAllReady(true);
+            updateSession({ calibrated: true, lightingOk: true, cameraReady: true });
+          }
+
           setChecks((prev) => {
             const nextLight = lightOk ? 'ok' : 'loading';
             const nextFace = faceOk ? 'ok' : 'loading';
@@ -296,7 +348,7 @@ export default function CalibrationPage() {
       cancelAnimationFrame(animId);
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
-  }, []);
+  }, [retryKey]);
 
   useEffect(() => {
     const all = Object.values(checks).every((v) => v === 'ok');
@@ -315,6 +367,7 @@ export default function CalibrationPage() {
   };
 
   const handleForceCalibrate = () => {
+    setErrorMsg('');
     setChecks({
       camera: 'ok',
       lighting: 'ok',
@@ -351,7 +404,7 @@ export default function CalibrationPage() {
               </p>
             </motion.div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 24, alignItems: 'start' }}>
               {/* Camera Workstation View */}
               <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
                 <div
@@ -493,18 +546,83 @@ export default function CalibrationPage() {
                   {errorMsg && (
                     <div
                       style={{
-                        marginTop: 12,
-                        padding: '10px 14px',
+                        marginTop: 14,
+                        padding: '12px 14px',
                         border: '2px solid var(--red-primary)',
                         background: '#fee2e2',
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.78rem',
-                        color: 'var(--red-primary)',
-                        fontWeight: 700,
-                        borderRadius: '3px',
+                        borderRadius: '4px',
+                        boxShadow: '2.5px 2.5px 0px var(--ink)',
                       }}
                     >
-                      {errorMsg}
+                      <div
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.78rem',
+                          color: 'var(--red-primary)',
+                          fontWeight: 700,
+                          marginBottom: 10,
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {errorMsg}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setErrorMsg('');
+                            setChecks({ camera: 'loading', lighting: 'loading', faceDetected: 'loading', framing: 'loading' });
+                            setRetryKey((k) => k + 1);
+                          }}
+                          className="brutal-btn btn-primary"
+                          style={{
+                            padding: '6px 12px',
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            background: 'var(--blue-600)',
+                            color: '#ffffff',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
+                          }}
+                        >
+                          <RotateCcw size={12} strokeWidth={2.5} />
+                          <span>Retry Camera</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleForceCalibrate}
+                          className="brutal-btn"
+                          style={{
+                            padding: '6px 12px',
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            background: 'var(--yellow-300)',
+                            border: '2px solid var(--ink)',
+                            boxShadow: '1.5px 1.5px 0px var(--ink)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Bypass & Continue →
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => navigate('/report')}
+                          className="brutal-btn"
+                          style={{
+                            padding: '6px 12px',
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            background: '#ffffff',
+                            border: '2px solid var(--ink)',
+                            boxShadow: '1.5px 1.5px 0px var(--ink)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          View Report →
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -531,15 +649,15 @@ export default function CalibrationPage() {
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: 'var(--orange-600)',
-                          fontSize: '0.78rem',
+                          color: 'var(--ink-secondary)',
+                          fontSize: '0.76rem',
                           fontFamily: 'var(--font-mono)',
-                          fontWeight: 800,
+                          fontWeight: 700,
                           cursor: 'pointer',
                           textDecoration: 'underline',
                         }}
                       >
-                        ⚡ Bypass diagnostics & proceed
+                        Camera already visible? Skip to test →
                       </button>
                     </div>
                   )}

@@ -9,12 +9,12 @@ import { useSession } from '../context/SessionContext';
 import { deriveMetrics, computeRiskScore } from '../lib/classifier';
 
 const ANALYSIS_STEPS = [
-  { id: 'extract',   label: 'Extracting pupil fixation coordinates', duration: 90 },
-  { id: 'saccades',  label: 'Calculating saccadic velocity & vector paths', duration: 80 },
-  { id: 'blink',     label: 'Evaluating involuntary blink dynamics', duration: 70 },
-  { id: 'social',    label: 'Computing social scene attention ratio', duration: 85 },
-  { id: 'classify',  label: 'Running on-device heuristic risk model', duration: 95 },
-  { id: 'report',    label: 'Synthesizing clinical screening summary', duration: 80 },
+  { id: 'extract',   label: 'Processing raw optical gaze coordinates', duration: 90 },
+  { id: 'saccades',  label: 'Calculating observational saccadic paths', duration: 80 },
+  { id: 'blink',     label: 'Evaluating spontaneous blink occurrences', duration: 70 },
+  { id: 'social',    label: 'Computing stimulus phase attention ratio', duration: 85 },
+  { id: 'classify',  label: 'Running 17-feature natural viewing ADHD model', duration: 95 },
+  { id: 'report',    label: 'Preparing clinical summary and telemetry', duration: 80 },
 ];
 
 function AnalysisStep({ step, status, delay }) {
@@ -96,15 +96,21 @@ export default function AnalysisPage() {
       metrics,
       riskLevel: result.level,
       riskScore: result.score,
+      adhdScore: result.adhdScore,
+      adhdLevel: result.adhdLevel,
+      adhdProbability: result.adhdProbability,
+      asdScore: result.asdScore,
+      asdLevel: result.asdLevel,
+      breakdown: result.breakdown,
       cohort: result.cohort,
       cohortId: result.cohortId,
       completed: true,
     });
 
     const runSteps = async () => {
-      const total = 3200;
-      const generatingTime = 1000;
-      const checklistHold = 1300;
+      const total = 420;
+      const generatingTime = 60;
+      const checklistHold = 80;
       const start = Date.now();
 
       while (true) {
@@ -114,7 +120,7 @@ export default function AnalysisPage() {
         setCurrentStep(idx);
         setProgress(pct);
         if (pct >= 100) break;
-        await new Promise((r) => setTimeout(r, 30));
+        await new Promise((r) => setTimeout(r, 20));
       }
 
       setCurrentStep(ANALYSIS_STEPS.length);
@@ -152,8 +158,8 @@ export default function AnalysisPage() {
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', marginBottom: '2rem' }}>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 12 }}>
-              <span className="brutal-tag tag-purple">STEP 3/4 · COMPILATION</span>
-              <span className="brutal-tag tag-blue">LOCAL HEURISTICS</span>
+              <span className="brutal-tag tag-purple">STEP 3 OF 4</span>
+              <span className="brutal-tag tag-blue">ON-DEVICE</span>
             </div>
 
             {/* Circular Progress Gauge */}
@@ -186,6 +192,18 @@ export default function AnalysisPage() {
             <p style={{ color: 'var(--ink-secondary)', fontSize: '0.88rem' }}>
               Neural feature extraction running locally. No biometric data transmitted off-device.
             </p>
+            <div style={{ marginTop: 10 }}>
+              <button
+                onClick={() => {
+                  window.scrollTo(0, 0);
+                  navigate('/report');
+                }}
+                className="brutal-btn brutal-btn-blue"
+                style={{ padding: '5px 12px', fontSize: '0.72rem', cursor: 'pointer' }}
+              >
+                View Report &rarr;
+              </button>
+            </div>
           </motion.div>
 
           {/* Pipeline Card */}
@@ -216,8 +234,8 @@ export default function AnalysisPage() {
           {/* Session Telemetry Grid — Vibrant Color Blocks */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
             {[
-              { label: 'Gaze Coordinates', value: session.gazePoints?.length?.toLocaleString() || '1,420', bg: '#eff6ff', color: 'var(--blue-700)' },
-              { label: 'Blink Signatures', value: session.blinkEvents?.length || '14', bg: '#fff7ed', color: 'var(--orange-600)' },
+              { label: 'Gaze Coordinates', value: (session.gazePoints?.length ?? 0).toLocaleString(), bg: '#eff6ff', color: 'var(--blue-700)' },
+              { label: 'Blink Signatures', value: (session.blinkEvents?.length ?? 0).toString(), bg: '#fff7ed', color: 'var(--orange-600)' },
               { label: 'Screen Duration', value: session.totalDuration ? `${Math.round(session.totalDuration)}s` : '60s', bg: '#fefce8', color: 'var(--amber-primary)' },
               { label: 'Privacy Mode', value: '100% On-Device', bg: '#f0fdf4', color: 'var(--green-700)' },
             ].map((item, i) => (

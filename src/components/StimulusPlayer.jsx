@@ -11,45 +11,66 @@ export default function StimulusPlayer({ active = false, onPhaseChange, onComple
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef(null);
-  const elapsedRef = useRef(0);
-  const phaseStartRef = useRef(Date.now());
+  const sessionStartRef = useRef(Date.now());
   const phaseIdxRef = useRef(0);
+  const onCompleteRef = useRef(onComplete);
+  const onProgressRef = useRef(onProgress);
+  const onPhaseChangeRef = useRef(onPhaseChange);
+
+  // Keep fresh callback references to eliminate stale closures
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+    onProgressRef.current = onProgress;
+    onPhaseChangeRef.current = onPhaseChange;
+  });
 
   useEffect(() => {
     if (!active) return;
 
-    phaseStartRef.current = Date.now();
+    const start = Date.now();
+    sessionStartRef.current = start;
     phaseIdxRef.current = 0;
-    elapsedRef.current = 0;
     setPhaseIdx(0);
     setElapsed(0);
 
+    onPhaseChangeRef.current?.(STIMULUS_PHASES[0]);
+    onProgressRef.current?.(0);
+
     const tick = () => {
       const now = Date.now();
-      const sincePhaseStart = now - phaseStartRef.current;
-      const currentPhase = STIMULUS_PHASES[phaseIdxRef.current];
+      const totalElapsed = now - sessionStartRef.current;
+      const progress = Math.min(totalElapsed / TOTAL_STIMULUS_DURATION, 1);
 
-      elapsedRef.current += 50;
-      setElapsed(elapsedRef.current);
-      onProgress?.(Math.min(elapsedRef.current / TOTAL_STIMULUS_DURATION, 1));
+      setElapsed(totalElapsed);
+      onProgressRef.current?.(progress);
 
-      if (sincePhaseStart >= currentPhase.duration) {
-        const nextIdx = phaseIdxRef.current + 1;
-        if (nextIdx >= STIMULUS_PHASES.length) {
-          onComplete?.();
-          return;
+      // Determine current phase accurately based on cumulative duration
+      let cumulativeTime = 0;
+      let targetIdx = STIMULUS_PHASES.length - 1;
+      for (let i = 0; i < STIMULUS_PHASES.length; i++) {
+        cumulativeTime += STIMULUS_PHASES[i].duration;
+        if (totalElapsed < cumulativeTime) {
+          targetIdx = i;
+          break;
         }
-        phaseIdxRef.current = nextIdx;
-        setPhaseIdx(nextIdx);
-        phaseStartRef.current = Date.now();
-        onPhaseChange?.(STIMULUS_PHASES[nextIdx]);
+      }
+
+      if (targetIdx !== phaseIdxRef.current) {
+        phaseIdxRef.current = targetIdx;
+        setPhaseIdx(targetIdx);
+        onPhaseChangeRef.current?.(STIMULUS_PHASES[targetIdx]);
+      }
+
+      if (totalElapsed >= TOTAL_STIMULUS_DURATION) {
+        onProgressRef.current?.(1);
+        onCompleteRef.current?.();
+        return;
       }
 
       timerRef.current = setTimeout(tick, 50);
     };
 
     timerRef.current = setTimeout(tick, 50);
-    onPhaseChange?.(STIMULUS_PHASES[0]);
 
     return () => clearTimeout(timerRef.current);
   }, [active]);
@@ -59,14 +80,14 @@ export default function StimulusPlayer({ active = false, onPhaseChange, onComple
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: '#0a0a0a' }}>
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <motion.div
           key={phase.id}
           style={{ position: 'absolute', inset: 0 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.15 }}
         >
           {phase.type === 'social' && <SocialScene phase={phase} />}
           {phase.type === 'geometric' && <GeometricScene phase={phase} />}
@@ -74,28 +95,6 @@ export default function StimulusPlayer({ active = false, onPhaseChange, onComple
           {phase.type === 'complete' && <CompleteScene />}
         </motion.div>
       </AnimatePresence>
-
-      {/* Phase label overlay */}
-      <div style={{
-        position: 'absolute', top: 16, left: 16,
-        display: 'flex', alignItems: 'center', gap: 8,
-        background: 'rgba(18, 24, 38, 0.88)',
-        border: '1.5px solid rgba(255, 255, 255, 0.25)',
-        borderRadius: '3px',
-        padding: '5px 12px',
-        backdropFilter: 'blur(8px)',
-        zIndex: 20,
-      }}>
-        <span style={{
-          width: 8, height: 8, borderRadius: '50%',
-          background: phase.accentColor || 'var(--yellow-400)',
-          boxShadow: `0 0 10px ${phase.accentColor || 'var(--yellow-400)'}`,
-          display: 'inline-block',
-        }} />
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          {phase.label}
-        </span>
-      </div>
     </div>
   );
 }
