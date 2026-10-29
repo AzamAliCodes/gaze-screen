@@ -91,7 +91,6 @@ export default function StimulusPlayer({ active = false, onPhaseChange, onComple
         >
           {phase.type === 'social' && <SocialScene phase={phase} />}
           {phase.type === 'geometric' && <GeometricScene phase={phase} />}
-          {phase.type === 'instruction' && <IntroScene />}
           {phase.type === 'complete' && <CompleteScene />}
         </motion.div>
       </AnimatePresence>
@@ -274,34 +273,6 @@ function GeometricScene({ phase }) {
         backgroundSize: '30px 30px',
         pointerEvents: 'none',
       }} />
-    </div>
-  );
-}
-
-function IntroScene() {
-  return (
-    <div style={{
-      width: '100%', height: '100%',
-      background: '#0a0f1d',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 20,
-    }}>
-      <motion.div
-        style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '1.2rem', color: 'var(--yellow-400)', letterSpacing: '0.15em' }}
-        animate={{ opacity: [0.4, 1, 0.4] }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-      >
-        CALIBRATING GAZE TRACKER…
-      </motion.div>
-      <div style={{ display: 'flex', gap: 10 }}>
-        {[0, 1, 2].map(i => (
-          <motion.div
-            key={i}
-            style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--blue-500)' }}
-            animate={{ scale: [0, 1, 0], opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.2 }}
-          />
-        ))}
-      </div>
     </div>
   );
 }

@@ -7,6 +7,18 @@ import MotionButton from '../components/MotionButton';
 import ShinyText from '../components/ShinyText';
 import SpotlightCard from '../components/SpotlightCard';
 import { loadResearchModel, runResearchSample } from '../lib/researchModel';
+import {
+  LaptopCoderMascot,
+  KantamRoboMascot,
+  ActionPunchMascot,
+  CrayonCreatorMascot,
+  ShinchanShiroRelaxMascot,
+  ComicBgPattern,
+} from '../components/shinchan/ShinchanMascots';
+import ComicStamp from '../components/shinchan/ComicStamp';
+import { useTheme } from '../context/ThemeContext';
+import { useSession } from '../context/SessionContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 const percent = (v) => `${(v * 100).toFixed(1)}%`;
 
@@ -23,6 +35,15 @@ const FEATURE_META = {
 
 export default function ResearchPage() {
   const navigate = useNavigate();
+  const { isShinchanTheme } = useTheme();
+  const { session, resetSession } = useSession();
+
+  const handleStartScreening = () => {
+    if (session?.completed) {
+      resetSession();
+    }
+    navigate('/consent');
+  };
   const [bundle, setBundle] = useState(null);
   const [selectedId, setSelectedId] = useState('');
   const [groupFilter, setGroupFilter] = useState('all');
@@ -136,7 +157,8 @@ export default function ResearchPage() {
 
   return (
     <PageTransition>
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100vh', background: isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <ComicBgPattern variant="doodle" opacity={0.26} />
         {/* Navigation Bar */}
         <nav
           style={{
@@ -154,6 +176,8 @@ export default function ResearchPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button
               onClick={() => navigate('/')}
+              type="button"
+              title="Navigate to Home"
               style={{
                 background: 'none',
                 border: 'none',
@@ -177,20 +201,81 @@ export default function ResearchPage() {
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--ink-muted)', fontWeight: 700 }}>
               RESEARCH BENCHMARK
             </span>
+            <ComicStamp text="47 BENCHMARKS" size="sm" rotate={-1} color="#059669" bgColor="#ECFDF5" />
           </div>
 
-          <MotionButton
-            variant="coral"
-            onClick={() => navigate('/consent')}
-            style={{ padding: '6px 14px', fontSize: '0.74rem' }}
-          >
-            Start Screening →
-          </MotionButton>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <ThemeToggle />
+            <MotionButton
+              variant="coral"
+              onClick={handleStartScreening}
+              style={{ padding: '6px 14px', fontSize: '0.74rem' }}
+            >
+              Start Screening →
+            </MotionButton>
+          </div>
         </nav>
 
         {/* Main Content */}
-        <main style={{ flex: 1, padding: '2rem 1.5rem 3rem' }}>
-          <div style={{ maxWidth: 960, margin: '0 auto' }}>
+        <main style={{ flex: 1, padding: '2rem 1.5rem 3rem', position: 'relative' }}>
+          {/* Kantam Robo — bold decorative right-margin accent from recruitment.githubsrmist.in */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(0.5rem, 2.5vw, 3.5rem)',
+              top: '17rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+              opacity: 0.92,
+            }}
+          >
+            <KantamRoboMascot size={220} alt="Kantam Robo AI Engine" style={{ width: 'clamp(140px, 15vw, 220px)', filter: 'drop-shadow(5px 7px 0px rgba(18,24,38,0.26))' }} />
+          </div>
+
+          {/* Action Punch Shinchan — bold decorative left-margin accent */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(0.5rem, 2.5vw, 3.5rem)',
+              top: '17rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+              opacity: 0.92,
+            }}
+          >
+            <ActionPunchMascot size={170} alt="Action Punch Benchmark" style={{ width: 'clamp(120px, 13vw, 180px)', filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.24))' }} />
+          </div>
+          <div style={{ maxWidth: 1060, margin: '0 auto', position: 'relative', zIndex: 5 }}>
+            {/* Shinchan Researcher Lab Note Banner — clean single-mascot composition */}
+            {isShinchanTheme && (
+              <div
+                className="shinchan-hide-mobile"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  marginBottom: '1.25rem',
+                  padding: '10px 14px',
+                  background: '#FEF9C3',
+                  border: '2px solid var(--ink)',
+                  borderRadius: '4px',
+                  boxShadow: '3px 3px 0px var(--ink)',
+                }}
+              >
+                <LaptopCoderMascot size={56} alt="Prof. Shinchan" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.18))' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.76rem', color: 'var(--ink)', fontWeight: 800 }}>
+                    Prof. Shinchan's Lab Benchmark Note:
+                  </div>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--ink-secondary)', lineHeight: 1.35 }}>
+                    Trained on real EyeLink 1000 infrared pupillometry data (47 children aged 8–13) across validated clinical folds!
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Header Section */}
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
@@ -567,24 +652,29 @@ export default function ResearchPage() {
                         )}
                       </div>
 
-                      {/* Export Button */}
+                      {/* Export Button with Shinchan & Shiro relaxing mascot */}
                       {result && (
-                        <button
-                          onClick={handleDownload}
-                          className="brutal-btn"
-                          style={{
-                            width: '100%',
-                            padding: '8px',
-                            fontSize: '0.74rem',
-                            fontWeight: 800,
-                            background: 'var(--yellow-300)',
-                            border: '1.5px solid var(--ink)',
-                            boxShadow: '2px 2px 0px var(--ink)',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          Export Participant JSON Telemetry
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <button
+                            onClick={handleDownload}
+                            className="brutal-btn"
+                            style={{
+                              flex: 1,
+                              padding: '8px',
+                              fontSize: '0.74rem',
+                              fontWeight: 800,
+                              background: 'var(--yellow-300)',
+                              border: '1.5px solid var(--ink)',
+                              boxShadow: '2px 2px 0px var(--ink)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Export Participant JSON Telemetry
+                          </button>
+                          <div className="shinchan-hide-mobile" style={{ flexShrink: 0 }}>
+                            <ShinchanShiroRelaxMascot size={64} alt="Shinchan and Shiro Relaxing" style={{ filter: 'drop-shadow(2px 2.5px 0px rgba(18,24,38,0.22))' }} />
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -703,9 +793,14 @@ export default function ResearchPage() {
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.76rem', fontWeight: 900, color: 'var(--ink)' }}>
-                          FOLD {currentRecord?.fold} MODEL COEFFICIENTS (L2-Regularized, C=0.1)
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div className="shinchan-hide-mobile">
+                            <CrayonCreatorMascot size={38} alt="Crayon model sketcher" style={{ filter: 'drop-shadow(1.5px 2px 0px rgba(18,24,38,0.2))' }} />
+                          </div>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.76rem', fontWeight: 900, color: 'var(--ink)' }}>
+                            FOLD {currentRecord?.fold} MODEL COEFFICIENTS (L2-Regularized, C=0.1)
+                          </span>
+                        </div>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--ink-muted)' }}>
                           Intercept (bias): {currentFoldModel.intercept.toFixed(3)}
                         </span>

@@ -590,7 +590,8 @@ body {
   .no-print,
   button,
   .brutal-btn,
-  .heatmap-empty {
+  .heatmap-empty,
+  .comic-bg-pattern {
     display: none !important;
   }
 
@@ -800,8 +801,189 @@ body {
     page-break-inside: avoid !important;
   }
 
-  canvas {
-    max-width: 100% !important;
+  /* ── Spatial Gaze Dispersion Heatmap: Dedicated Page 2 Telemetry Appendix ── */
+  .heatmap-empty {
+    display: none !important;
+  }
+
+  .heatmap-section.heatmap-active {
+    display: block !important;
+    break-before: page !important;
+    page-break-before: always !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-top: 0 !important;
+    margin-bottom: 8px !important;
+    padding: 14px 18px !important;
+    background: #ffffff !important;
+    border: 2px solid #121826 !important;
+    box-shadow: 2.5px 2.5px 0px #121826 !important;
+    border-radius: 3px !important;
+  }
+
+  .heatmap-section.heatmap-active > div {
     height: auto !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+  }
+
+  .heatmap-print-header {
+    display: block !important;
+    margin-bottom: 8px !important;
+  }
+
+  .heatmap-section canvas {
+    width: 100% !important;
+    max-height: 380px !important;
+    border: 2px solid #121826 !important;
+    border-radius: 3px !important;
+    display: block !important;
+    margin: 8px 0 !important;
+  }
+
+  .report-print-footer {
+    display: block !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
+
+/* ==========================================================================
+   SHINCHAN THEME LAYER UTILITIES & ACCENTS (FROM RECRUITMENT SITE)
+   ========================================================================== */
+:root {
+  --shinchan-cream:  #faf7ee;
+  --shinchan-red:    #e8342a;
+  --shinchan-yellow: #ffd600;
+  --shinchan-blue:   #3b6fe8;
+  --shinchan-green:  #2dc86a;
+  --shinchan-purple: #7b4fd4;
+}
+
+.shinchan-badge-yellow {
+  background-color: #ffd600;
+  color: #121826;
+  border: 2.5px solid #121826;
+  box-shadow: 3px 3px 0px #121826;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  padding: 4px 14px;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shinchan-badge-red {
+  background-color: #e8342a;
+  color: #ffffff;
+  border: 2.5px solid #121826;
+  box-shadow: 3px 3px 0px #121826;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  padding: 4px 14px;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shinchan-badge-blue {
+  background-color: #3b6fe8;
+  color: #ffffff;
+  border: 2.5px solid #121826;
+  box-shadow: 3px 3px 0px #121826;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  padding: 4px 14px;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shinchan-layer {
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .shinchan-hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1380px) {
+  .shinchan-hide-below-xl {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shinchan-sticker,
+  .comic-speech-bubble,
+  .comic-stamp {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+.comic-halftone-pattern {
+  background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+  background-size: 14px 14px;
+}
+
+/* Doodle pattern styling helper */
+.comic-bg-pattern {
+  pointer-events: none;
+}
+
+/* Remove up/down spinner arrows on number inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Shinchan Theme Toggle overrides (Clinical state when OFF) */
+html.shinchan-theme-on,
+html.shinchan-theme-on body {
+  background-color: #FFFEEF !important;
+}
+
+html.shinchan-theme-off,
+html.shinchan-theme-off body {
+  background-color: #ffffff !important;
+}
+
+html.shinchan-theme-off .shinchan-layer,
+html.shinchan-theme-off .shinchan-sticker,
+html.shinchan-theme-off .comic-speech-bubble,
+html.shinchan-theme-off .comic-stamp,
+html.shinchan-theme-off .comic-bg-pattern,
+html.shinchan-theme-off .pixel-car-container,
+html.shinchan-theme-off .shinchan-only {
+  display: none !important;
+}
+
+html.shinchan-theme-off .clinical-only {
+  display: block !important;
+}
+
+html.shinchan-theme-on .clinical-only {
+  display: none !important;
+}
+

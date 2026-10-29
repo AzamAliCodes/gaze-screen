@@ -9,6 +9,19 @@ import SpotlightCard from '../components/SpotlightCard';
 import { LiveDot } from '../components/UI';
 import { useSession } from '../context/SessionContext';
 import soundEngine from '../lib/soundEngine';
+import {
+  ShinchanHeadBalanceMascot,
+  ShiroShinchanMascot,
+  ActionPunchMascot,
+  ActionKamenMascot,
+  KantamRoboMascot,
+  DrivingPixelCar,
+  ComicBgPattern,
+} from '../components/shinchan/ShinchanMascots';
+import SpeechBubble from '../components/shinchan/SpeechBubble';
+import ComicStamp from '../components/shinchan/ComicStamp';
+import { useTheme } from '../context/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 function NavBar() {
   const navigate = useNavigate();
@@ -27,7 +40,9 @@ function NavBar() {
       }}
     >
       <button
-        onClick={() => navigate('/consent')}
+        onClick={() => navigate('/')}
+        type="button"
+        title="Navigate to Home"
         style={{
           background: 'none',
           border: 'none',
@@ -48,8 +63,10 @@ function NavBar() {
         GAZE<span style={{ color: 'var(--orange-500)' }}>SCREEN</span>
       </button>
 
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        {[1, 2, 3, 4].map((i) => (
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <ThemeToggle />
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
             style={{
@@ -77,6 +94,7 @@ function NavBar() {
         >
           STEP 2/4
         </span>
+        </div>
       </div>
     </nav>
   );
@@ -149,6 +167,7 @@ function CheckItem({ label, status }) {
 
 export default function CalibrationPage() {
   const navigate = useNavigate();
+  const { isShinchanTheme } = useTheme();
   const { session, updateSession } = useSession();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -165,7 +184,26 @@ export default function CalibrationPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [retryKey, setRetryKey] = useState(0);
 
+  // Route guard: if user accesses /calibration directly without filling participant details & consent, redirect to /consent
+  const hasConsent = Boolean(
+    session?.consentGiven &&
+    session?.parentName?.trim() &&
+    session?.childName?.trim() &&
+    session?.childAge &&
+    !isNaN(parseInt(session.childAge, 10)) &&
+    parseInt(session.childAge, 10) >= 1 &&
+    parseInt(session.childAge, 10) <= 99
+  );
+
   useEffect(() => {
+    if (!hasConsent) {
+      navigate('/consent', { replace: true });
+    }
+  }, [hasConsent, navigate]);
+
+  useEffect(() => {
+    if (!hasConsent) return;
+
     let animId;
     let stopped = false;
     let autoPassTimeout;
@@ -351,6 +389,7 @@ export default function CalibrationPage() {
   }, [retryKey]);
 
   useEffect(() => {
+    if (!hasConsent) return;
     const all = Object.values(checks).every((v) => v === 'ok');
     if (all) {
       setAllReady(true);
@@ -358,7 +397,7 @@ export default function CalibrationPage() {
         updateSession({ calibrated: true, lightingOk: true, cameraReady: true });
       }
     }
-  }, [checks, session.calibrated, updateSession]);
+  }, [checks, session.calibrated, updateSession, hasConsent]);
 
   const handleStart = () => {
     soundEngine.prepareAudio();
@@ -380,13 +419,48 @@ export default function CalibrationPage() {
 
   const lightPct = Math.min(100, Math.max(15, Math.round((lightValue / 180) * 100)));
 
+  if (!hasConsent) {
+    return null;
+  }
+
   return (
     <PageTransition>
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100vh', background: isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <ComicBgPattern variant="doodle" opacity={0.28} />
         <NavBar />
 
-        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2.5rem 1.5rem' }}>
-          <div style={{ maxWidth: 940, width: '100%' }}>
+        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2.5rem 1.5rem', position: 'relative' }}>
+          {/* Action Kamen cheering calibration on right margin */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(0.5rem, 2.5vw, 3.5rem)',
+              top: '13rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+              opacity: 0.92,
+            }}
+          >
+            <ActionKamenMascot size={170} alt="Action Kamen Cheering" style={{ width: 'clamp(120px, 13vw, 180px)', filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.24))' }} />
+          </div>
+
+          {/* Kantam Robo assisting optical centering on left margin */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(0.5rem, 2.5vw, 3.5rem)',
+              top: '13rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+              opacity: 0.92,
+            }}
+          >
+            <KantamRoboMascot size={220} alt="Kantam Robo Sensor Alignment" style={{ width: 'clamp(140px, 15vw, 220px)', filter: 'drop-shadow(5px 7px 0px rgba(18,24,38,0.26))' }} />
+          </div>
+
+          <div style={{ maxWidth: 1060, width: '100%', position: 'relative', zIndex: 5 }}>
             {/* Header */}
             <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '1.75rem' }}>
               <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
@@ -405,8 +479,13 @@ export default function CalibrationPage() {
             </motion.div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 24, alignItems: 'start' }}>
-              {/* Camera Workstation View */}
-              <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+              {/* Camera Workstation View with Driving Pixel Car perimeter animation */}
+              <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} style={{ position: 'relative' }}>
+                {/* Driving Pixel Car along camera workstation border */}
+                <div className="shinchan-hide-mobile">
+                  <DrivingPixelCar size={42} duration={14} />
+                </div>
+
                 <div
                   style={{
                     background: '#ffffff',
@@ -432,9 +511,12 @@ export default function CalibrationPage() {
                         FEED: OPTICAL SENSOR 01
                       </span>
                     </div>
-                    <span className="brutal-tag tag-blue" style={{ fontSize: '0.64rem', padding: '2px 8px' }}>
-                      640×480 @ 30 FPS
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <ComicStamp text="RETICLE SCAN" size="sm" rotate={1} color="#059669" bgColor="#ECFDF5" />
+                      <span className="brutal-tag tag-blue" style={{ fontSize: '0.64rem', padding: '2px 8px' }}>
+                        640×480 @ 30 FPS
+                      </span>
+                    </div>
                   </div>
 
                   <div style={{ position: 'relative', background: '#0f172a', aspectRatio: '4/3' }}>
@@ -520,6 +602,34 @@ export default function CalibrationPage() {
               {/* Diagnostic Checklist */}
               <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
                 <SpotlightCard style={{ padding: '1.75rem', background: '#fafaf9', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
+                  {/* Shiro & Shinchan Focus Tip Banner */}
+                  {isShinchanTheme && (
+                    <div
+                      className="shinchan-hide-mobile"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        marginBottom: 16,
+                        padding: '10px 12px',
+                        background: '#FEF9C3',
+                        border: '2px solid var(--ink)',
+                        borderRadius: '4px',
+                        boxShadow: '2.5px 2.5px 0px var(--ink)',
+                      }}
+                    >
+                      <ShinchanHeadBalanceMascot size={64} alt="Shinchan balancing Shiro on head" style={{ filter: 'drop-shadow(2px 2px 0px rgba(18,24,38,0.18))' }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.74rem', color: 'var(--ink)', fontWeight: 800 }}>
+                          Head &amp; Camera Alignment Tip:
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--ink-secondary)', lineHeight: 1.35 }}>
+                          Balance your head steady like Shinchan &amp; Shiro! Keep your face centered inside the reticle until all checks turn green!
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div
                     style={{
                       fontFamily: 'var(--font-mono)',
@@ -663,25 +773,38 @@ export default function CalibrationPage() {
                   )}
                 </SpotlightCard>
 
-                {/* Launch Button */}
-                <div style={{ marginTop: 20 }}>
-                  <MotionButton
-                    variant="coral"
-                    onClick={handleStart}
-                    disabled={!allReady}
-                    style={{ width: '100%', justifyContent: 'center', fontSize: '1rem', padding: '16px', letterSpacing: '0.04em' }}
-                  >
-                    {allReady ? (
-                      <>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 8 }}>
-                          <polygon points="5 3 19 12 5 21 5 3" />
-                        </svg>
-                        Begin 60-Second Screening
-                      </>
-                    ) : (
-                      'Calibrating Optical Sensors…'
-                    )}
-                  </MotionButton>
+                {/* Launch Button Area — Action Kamen on right side, button raised upward */}
+                <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 260 }}>
+                    <MotionButton
+                      variant="coral"
+                      onClick={handleStart}
+                      disabled={!allReady}
+                      style={{ width: '100%', justifyContent: 'center', fontSize: '1rem', padding: '15px 20px', letterSpacing: '0.04em' }}
+                    >
+                      {allReady ? (
+                        <>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 8 }}>
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                          </svg>
+                          Begin 60-Second Screening
+                        </>
+                      ) : (
+                        'Calibrating Optical Sensors…'
+                      )}
+                    </MotionButton>
+                  </div>
+                  {allReady && isShinchanTheme && (
+                    <div
+                      className="shinchan-hide-mobile"
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, pointerEvents: 'none' }}
+                    >
+                      <SpeechBubble tail="right" variant="yellow" size="sm">
+                        <span>Ready!</span>
+                      </SpeechBubble>
+                      <ActionPunchMascot size={88} alt="Action Kamen Ready" style={{ filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.22))' }} />
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </div>

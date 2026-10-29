@@ -10,10 +10,17 @@ import { useSession } from '../context/SessionContext';
 import { TOTAL_STIMULUS_DURATION } from '../lib/stimulus';
 import soundEngine from '../lib/soundEngine';
 import { deriveMetrics, computeRiskScore } from '../lib/classifier';
+import {
+  PartyShinchanMascot,
+} from '../components/shinchan/ShinchanMascots';
+import { useTheme } from '../context/ThemeContext';
+import SpeechBubble from '../components/shinchan/SpeechBubble';
+import ComicStamp from '../components/shinchan/ComicStamp';
 
 export default function StimulusPage() {
   const navigate = useNavigate();
   const { session, updateSession, addGazePoint, addBlinkEvent } = useSession();
+  const { isShinchanTheme } = useTheme();
 
   const [phase, setPhase] = useState(null);
   const [progress, setProgress] = useState(0);
@@ -40,16 +47,35 @@ export default function StimulusPage() {
   const startTimeRef = useRef(null);
   const lastPosRef = useRef(null);
 
+  // Route guard: if user accesses /stimulus directly without filling participant details & consent, redirect to /consent
+  const hasConsent = Boolean(
+    session?.consentGiven &&
+    session?.parentName?.trim() &&
+    session?.childName?.trim() &&
+    session?.childAge &&
+    !isNaN(parseInt(session.childAge, 10)) &&
+    parseInt(session.childAge, 10) >= 1 &&
+    parseInt(session.childAge, 10) <= 99
+  );
+
+  useEffect(() => {
+    if (!hasConsent) {
+      navigate('/consent', { replace: true });
+    }
+  }, [hasConsent, navigate]);
+
   // Subscribe to sound engine state
   useEffect(() => {
+    if (!hasConsent) return;
     return soundEngine.subscribe(({ isRunning, isMuted: engineMuted }) => {
       setAudioRunning(isRunning);
       setIsMuted(engineMuted);
     });
-  }, []);
+  }, [hasConsent]);
 
   // Global user gesture listener: unlock audio immediately upon any screen click/tap/keypress
   useEffect(() => {
+    if (!hasConsent) return;
     const unlockAudio = () => {
       soundEngine.resumeContext();
     };
@@ -224,6 +250,25 @@ export default function StimulusPage() {
   const elapsed = Math.round(progress * (TOTAL_STIMULUS_DURATION / 1000));
   const totalSec = Math.round(TOTAL_STIMULUS_DURATION / 1000);
 
+  // Determine current region of interest (ROI) from gaze position
+  const currentROI = useMemo(() => {
+    if (!liveGaze) return 'OPTICAL SENSORS SYNCHRONIZED';
+    const normX = liveGaze.x / window.innerWidth;
+    const normY = liveGaze.y / window.innerHeight;
+
+    if (normX >= 0.35 && normX <= 0.65 && normY >= 0.25 && normY <= 0.7) {
+      return phase?.phase === 'social' ? 'CENTRAL SOCIAL REGION (FACES)' : 'GEOMETRIC FOCAL CORE';
+    }
+    if (normX < 0.5 && normY < 0.5) return 'QUADRANT I · TOP-LEFT ROI';
+    if (normX >= 0.5 && normY < 0.5) return 'QUADRANT II · TOP-RIGHT ROI';
+    if (normX < 0.5 && normY >= 0.5) return 'QUADRANT III · BOTTOM-LEFT ROI';
+    return 'QUADRANT IV · BOTTOM-RIGHT ROI';
+  }, [liveGaze, phase]);
+
+  if (!hasConsent) {
+    return null;
+  }
+
   // If completing, halt all heavy canvas animations and camera immediately
   if (isCompleting) {
     return (
@@ -260,21 +305,6 @@ export default function StimulusPage() {
       </div>
     );
   }
-
-  // Determine current region of interest (ROI) from gaze position
-  const currentROI = useMemo(() => {
-    if (!liveGaze) return 'OPTICAL SENSORS SYNCHRONIZED';
-    const normX = liveGaze.x / window.innerWidth;
-    const normY = liveGaze.y / window.innerHeight;
-
-    if (normX >= 0.35 && normX <= 0.65 && normY >= 0.25 && normY <= 0.7) {
-      return phase?.phase === 'social' ? 'CENTRAL SOCIAL REGION (FACES)' : 'GEOMETRIC FOCAL CORE';
-    }
-    if (normX < 0.5 && normY < 0.5) return 'QUADRANT I · TOP-LEFT ROI';
-    if (normX >= 0.5 && normY < 0.5) return 'QUADRANT II · TOP-RIGHT ROI';
-    if (normX < 0.5 && normY >= 0.5) return 'QUADRANT III · BOTTOM-LEFT ROI';
-    return 'QUADRANT IV · BOTTOM-RIGHT ROI';
-  }, [liveGaze, phase]);
 
   // Phase color theme for animations
   const isSocial = phase?.phase === 'social';
@@ -479,13 +509,25 @@ export default function StimulusPage() {
               ) : (
                 /* Camera Ready -> Verified Live Countdown */
                 <>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
                     <span className="brutal-tag tag-green">● TRACKING LIVE & VERIFIED</span>
                     <span className="brutal-tag tag-yellow">60s PROTOCOL</span>
+                    <ComicStamp text="ACTION FOCUS" size="sm" rotate={-1} color="#2563EB" bgColor="#EFF6FF" />
                     <span className="brutal-tag tag-green" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                       <Music size={11} strokeWidth={2.5} /> AUDIO MELODY READY
                     </span>
                   </div>
+
+                  {/* Shinchan Mascot Encouragement during Countdown */}
+                  {isShinchanTheme && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '6px 0' }}>
+                      <PartyShinchanMascot size={90} alt="Shinchan Peace Sign" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.24))' }} />
+                      <SpeechBubble tail="left" variant="yellow" size="sm">
+                        <span>Screening is about to start! Watch the moving shapes!</span>
+                      </SpeechBubble>
+                    </div>
+                  )}
+
                   <motion.div
                     key={countdown}
                     initial={{ scale: 1.6, opacity: 0 }}
@@ -581,7 +623,7 @@ export default function StimulusPage() {
               className={`brutal-tag ${isSocial ? 'tag-blue' : 'tag-purple'}`}
               style={{ fontSize: '0.68rem', padding: '3px 8px' }}
             >
-              {phase?.label || 'Calibrating'}
+              {phase?.label || 'Screening Active'}
             </span>
 
             {/* Live Blink Detection Flash Tag */}
@@ -615,7 +657,7 @@ export default function StimulusPage() {
           </div>
 
           {/* Clock Timer */}
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <div
               style={{
                 fontFamily: 'var(--font-mono)',

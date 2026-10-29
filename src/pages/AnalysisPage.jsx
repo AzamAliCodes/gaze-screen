@@ -7,6 +7,15 @@ import SpotlightCard from '../components/SpotlightCard';
 import { ProgressRing } from '../components/UI';
 import { useSession } from '../context/SessionContext';
 import { deriveMetrics, computeRiskScore } from '../lib/classifier';
+import {
+  LaptopCoderMascot,
+  KantamRoboMascot,
+  BumblebeeMascot,
+  DrivingPixelCar,
+  ComicBgPattern,
+} from '../components/shinchan/ShinchanMascots';
+import SpeechBubble from '../components/shinchan/SpeechBubble';
+import ComicStamp from '../components/shinchan/ComicStamp';
 
 const ANALYSIS_STEPS = [
   { id: 'extract',   label: 'Processing raw optical gaze coordinates', duration: 90 },
@@ -145,7 +154,7 @@ export default function AnalysisPage() {
       <div
         style={{
           minHeight: '100vh',
-          background: '#ffffff',
+          background: isShinchanTheme ? '#FFFEEF' : '#ffffff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -154,7 +163,38 @@ export default function AnalysisPage() {
           position: 'relative',
         }}
       >
-        <div style={{ maxWidth: 620, width: '100%', position: 'relative', zIndex: 5 }}>
+        <ComicBgPattern variant="doodle" opacity={0.28} />
+        {/* Kantam Robo on right flank — powering neural classifier */}
+        <div
+          className="shinchan-hide-mobile"
+          style={{
+            position: 'absolute',
+            right: 'clamp(0.5rem, 3vw, 4rem)',
+            top: '5rem',
+            pointerEvents: 'none',
+            zIndex: 1,
+            opacity: 0.92,
+          }}
+        >
+          <KantamRoboMascot size={210} alt="Kantam Robo Neural Engine" style={{ width: 'clamp(140px, 15vw, 210px)', filter: 'drop-shadow(5px 7px 0px rgba(18,24,38,0.26))' }} />
+        </div>
+
+        {/* Bumblebee Shinchan on left flank — resting during heavy compute */}
+        <div
+          className="shinchan-hide-mobile"
+          style={{
+            position: 'absolute',
+            left: 'clamp(0.5rem, 3vw, 4rem)',
+            top: '5rem',
+            pointerEvents: 'none',
+            zIndex: 1,
+            opacity: 0.92,
+          }}
+        >
+          <BumblebeeMascot size={150} alt="Bumblebee Shinchan Sleeping" style={{ width: 'clamp(115px, 12vw, 165px)', filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.24))' }} />
+        </div>
+
+        <div style={{ maxWidth: 720, width: '100%', position: 'relative', zIndex: 5 }}>
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center', marginBottom: '2rem' }}>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 12 }}>
@@ -163,7 +203,7 @@ export default function AnalysisPage() {
             </div>
 
             {/* Circular Progress Gauge */}
-            <div style={{ position: 'relative', display: 'inline-block', margin: '14px 0 10px' }}>
+            <div style={{ position: 'relative', display: 'inline-block', margin: '14px 0 4px' }}>
               <ProgressRing progress={progress} size={134} stroke={10} color="var(--purple-600)" />
               <div
                 style={{
@@ -182,6 +222,14 @@ export default function AnalysisPage() {
                   EVALUATING
                 </span>
               </div>
+            </div>
+
+            {/* Laptop Shinchan coding from recruitment site */}
+            <div className="shinchan-hide-mobile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, margin: '6px 0 10px' }}>
+              <LaptopCoderMascot size={130} alt="Shinchan Crunching Data" style={{ filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.22))' }} />
+              <SpeechBubble tail="bottom-left" variant="yellow" size="sm">
+                <span>Crunching 17 eye features at Action Kamen speed!</span>
+              </SpeechBubble>
             </div>
 
             <h1 className="text-section" style={{ marginTop: 6, marginBottom: 4 }}>
@@ -206,8 +254,12 @@ export default function AnalysisPage() {
             </div>
           </motion.div>
 
-          {/* Pipeline Card */}
-          <SpotlightCard style={{ padding: '1.75rem', background: '#faf5ff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)', marginBottom: '1.5rem' }}>
+          {/* Pipeline Card with Driving Pixel Car animation */}
+          <SpotlightCard style={{ position: 'relative', padding: '1.75rem', background: '#faf5ff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)', marginBottom: '1.5rem', overflow: 'visible' }}>
+            {/* Driving Pixel Car along pipeline border */}
+            <div className="shinchan-hide-mobile">
+              <DrivingPixelCar size={42} duration={12} />
+            </div>
             <div
               style={{
                 fontFamily: 'var(--font-mono)',
@@ -219,11 +271,16 @@ export default function AnalysisPage() {
                 marginBottom: '1.25rem',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
                 gap: 8,
               }}
             >
-              <span style={{ width: 10, height: 10, background: 'var(--purple-600)', display: 'inline-block' }} />
-              Analysis Pipeline Execution
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 10, height: 10, background: 'var(--purple-600)', display: 'inline-block' }} />
+                <span>Analysis Pipeline Execution</span>
+              </div>
+              <ComicStamp text="CHOCOBI NEURAL SPEED" size="sm" rotate={1.5} color="#7E22CE" bgColor="#FAF5FF" />
             </div>
 
             {ANALYSIS_STEPS.map((step, i) => (
