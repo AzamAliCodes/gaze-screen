@@ -16,6 +16,14 @@ import {
 } from '../components/shinchan/ShinchanMascots';
 import SpeechBubble from '../components/shinchan/SpeechBubble';
 import ComicStamp from '../components/shinchan/ComicStamp';
+import {
+  ScientistMinion,
+  FlyingSuperMinion,
+  DrivingMinionScooter,
+  MinionBgPattern,
+} from '../components/minion/MinionMascots';
+import MinionSpeechBubble from '../components/minion/MinionSpeechBubble';
+import { useTheme } from '../context/ThemeContext';
 
 const ANALYSIS_STEPS = [
   { id: 'extract',   label: 'Processing raw optical gaze coordinates', duration: 90 },
@@ -90,6 +98,7 @@ function AnalysisStep({ step, status, delay }) {
 
 export default function AnalysisPage() {
   const navigate = useNavigate();
+  const { theme, isMinionTheme, isShinchanTheme, isClinicalTheme } = useTheme();
   const { session, updateSession } = useSession();
   const [currentStep, setCurrentStep] = useState(0);
   const [done, setDone] = useState(false);
@@ -154,7 +163,7 @@ export default function AnalysisPage() {
       <div
         style={{
           minHeight: '100vh',
-          background: isShinchanTheme ? '#FFFEEF' : '#ffffff',
+          background: isMinionTheme ? '#FEFCE8' : isShinchanTheme ? '#FFFEEF' : '#ffffff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -164,6 +173,36 @@ export default function AnalysisPage() {
         }}
       >
         <ComicBgPattern variant="doodle" opacity={0.28} />
+        <MinionBgPattern opacity={0.26} />
+
+        {/* ── MINION FLANK MASCOTS ── */}
+        <div
+          className="minion-hide-mobile"
+          style={{
+            position: 'absolute',
+            right: 'clamp(0.5rem, 3vw, 4rem)',
+            top: '5rem',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        >
+          <ScientistMinion size={210} alt="Scientist Minion AI Engine" style={{ width: 'clamp(140px, 15vw, 210px)', filter: 'drop-shadow(5px 7px 0px rgba(18,24,38,0.28))' }} />
+        </div>
+
+        <div
+          className="minion-hide-mobile"
+          style={{
+            position: 'absolute',
+            left: 'clamp(0.5rem, 3vw, 4rem)',
+            top: '5rem',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        >
+          <FlyingSuperMinion size={160} alt="Flying Super Minion Neural Accelerator" style={{ width: 'clamp(120px, 13vw, 175px)', filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.28))' }} />
+        </div>
+
+        {/* ── SHINCHAN FLANK MASCOTS ── */}
         {/* Kantam Robo on right flank — powering neural classifier */}
         <div
           className="shinchan-hide-mobile"
@@ -204,7 +243,7 @@ export default function AnalysisPage() {
 
             {/* Circular Progress Gauge */}
             <div style={{ position: 'relative', display: 'inline-block', margin: '14px 0 4px' }}>
-              <ProgressRing progress={progress} size={134} stroke={10} color="var(--purple-600)" />
+              <ProgressRing progress={progress} size={134} stroke={10} color={isMinionTheme ? '#245B9E' : 'var(--purple-600)'} />
               <div
                 style={{
                   position: 'absolute',
@@ -218,22 +257,32 @@ export default function AnalysisPage() {
                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: '2.1rem', color: 'var(--ink)' }}>
                   {Math.round(progress)}%
                 </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.64rem', fontWeight: 800, color: 'var(--purple-700)', background: 'var(--purple-100)', padding: '1px 6px', borderRadius: '2px', border: '1px solid var(--ink)' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.64rem', fontWeight: 800, color: isMinionTheme ? '#1E3A8A' : 'var(--purple-700)', background: isMinionTheme ? '#FEF08A' : 'var(--purple-100)', padding: '1px 6px', borderRadius: '2px', border: '1px solid var(--ink)' }}>
                   EVALUATING
                 </span>
               </div>
             </div>
 
+            {/* Minion crunching data */}
+            {isMinionTheme && (
+              <div className="minion-hide-mobile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, margin: '6px 0 10px' }}>
+                <ScientistMinion size={120} alt="Scientist Minion Crunching Data" style={{ filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.24))' }} />
+                <MinionSpeechBubble text="Crunching 17 eye features with neural AI! Fast and private!" variant="yellow" />
+              </div>
+            )}
+
             {/* Laptop Shinchan coding from recruitment site */}
-            <div className="shinchan-hide-mobile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, margin: '6px 0 10px' }}>
-              <LaptopCoderMascot size={130} alt="Shinchan Crunching Data" style={{ filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.22))' }} />
-              <SpeechBubble tail="bottom-left" variant="yellow" size="sm">
-                <span>Crunching 17 eye features at Action Kamen speed!</span>
-              </SpeechBubble>
-            </div>
+            {isShinchanTheme && (
+              <div className="shinchan-hide-mobile" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, margin: '6px 0 10px' }}>
+                <LaptopCoderMascot size={130} alt="Shinchan Crunching Data" style={{ filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.22))' }} />
+                <SpeechBubble tail="bottom-left" variant="yellow" size="sm">
+                  <span>Crunching 17 eye features at Action Kamen speed!</span>
+                </SpeechBubble>
+              </div>
+            )}
 
             <h1 className="text-section" style={{ marginTop: 6, marginBottom: 4 }}>
-              <ShinyText color="var(--ink)" shineColor="var(--purple-600)">
+              <ShinyText color="var(--ink)" shineColor="var(--blue-600, #2563eb)">
                 On-Device Biomarker Analysis
               </ShinyText>
             </h1>
@@ -259,6 +308,10 @@ export default function AnalysisPage() {
             {/* Driving Pixel Car along pipeline border */}
             <div className="shinchan-hide-mobile">
               <DrivingPixelCar size={42} duration={12} />
+            </div>
+            {/* Driving Minion Scooter along pipeline border */}
+            <div className="minion-hide-mobile">
+              <DrivingMinionScooter size={46} duration={12} />
             </div>
             <div
               style={{

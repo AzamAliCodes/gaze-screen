@@ -32,8 +32,31 @@ import {
 } from '../components/shinchan/DoodleDecorations';
 import ShinchanFooter from '../components/shinchan/ShinchanFooter';
 
+import {
+  HeroStuartMascot,
+  FlyingSuperMinion,
+  CornerPeekingMinion,
+  ScientistMinion,
+  CelebratingBob,
+  GuitarStuart,
+  WavingStuart,
+  RunningTourist,
+  AdoringBob,
+  BananaEvilDuo,
+  GazeShiftMinion,
+  ActionClawsMinion,
+  CaptainMinion,
+  DrivingMinionScooter,
+  MinionGoggleEye,
+  MinionLogo,
+  MinionBgPattern,
+} from '../components/minion/MinionMascots';
+import MinionSticker from '../components/minion/MinionSticker';
+import MinionSpeechBubble from '../components/minion/MinionSpeechBubble';
+import MinionFooter from '../components/minion/MinionFooter';
+
 /* ── Interactive Clinical Eye Icon with Synchronized Shiny Flare & Floating Motion ── */
-function EyeLogo() {
+function EyeLogo({ isMinionTheme }) {
   return (
     <motion.div
       style={{ position: 'relative', width: 90, height: 90, margin: '0 auto' }}
@@ -50,7 +73,9 @@ function EyeLogo() {
           position: 'absolute',
           inset: -7,
           borderRadius: '50%',
-          border: '2px dashed rgba(37, 99, 235, 0.45)',
+          border: isMinionTheme
+            ? '2.5px dashed rgba(36, 91, 158, 0.65)'
+            : '2px dashed rgba(37, 99, 235, 0.45)',
           pointerEvents: 'none',
         }}
         animate={{ rotate: 360, scale: [0.97, 1.05, 0.97] }}
@@ -66,7 +91,7 @@ function EyeLogo() {
           width: 90,
           height: 90,
           borderRadius: '50%',
-          background: '#ffffff',
+          background: isMinionTheme ? '#FED41E' : '#ffffff',
           border: '3px solid var(--ink)',
           boxShadow: '4px 4px 0px var(--ink)',
           display: 'flex',
@@ -76,62 +101,69 @@ function EyeLogo() {
           overflow: 'hidden',
         }}
       >
-        {/* Synchronized Shiny Flare Beam (Identical to GAZESCREEN title) */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '50%',
-            overflow: 'hidden',
-            pointerEvents: 'none',
-            zIndex: 1,
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              inset: '-100%',
-              background:
-                'linear-gradient(120deg, transparent 38%, rgba(37, 99, 235, 0.28) 46%, rgba(96, 165, 250, 0.8) 50%, rgba(37, 99, 235, 0.28) 54%, transparent 62%)',
-              backgroundSize: '220% 100%',
-              animation: 'shiny-sweep 3.5s ease-in-out infinite',
-            }}
-          />
-        </div>
+        {isMinionTheme ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <MinionGoggleEye size={72} style={{ filter: 'none' }} />
+          </div>
+        ) : (
+          <>
+            {/* Synchronized Shiny Flare Beam */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: '50%',
+                overflow: 'hidden',
+                pointerEvents: 'none',
+                zIndex: 1,
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: '-100%',
+                  background:
+                    'linear-gradient(120deg, transparent 38%, rgba(37, 99, 235, 0.28) 46%, rgba(96, 165, 250, 0.8) 50%, rgba(37, 99, 235, 0.28) 54%, transparent 62%)',
+                  backgroundSize: '220% 100%',
+                  animation: 'shiny-sweep 3.5s ease-in-out infinite',
+                }}
+              />
+            </div>
 
-        {/* Clinical Eye SVG */}
-        <svg
-          width="46"
-          height="46"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="var(--ink)"
-          strokeWidth="1.8"
-          style={{ position: 'relative', zIndex: 2 }}
-        >
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle cx="12" cy="12" r="3.6" stroke="var(--ink)" strokeWidth="2" fill="#f8fafc" />
-          <motion.circle
-            cx="12"
-            cy="12"
-            r="2.1"
-            fill="var(--blue-600)"
-            animate={{
-              scale: [1, 1.35, 1],
-              fill: ['var(--blue-600)', '#60a5fa', 'var(--blue-600)'],
-            }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          {/* Twinkle Specular Glint */}
-          <motion.circle
-            cx="13.1"
-            cy="10.9"
-            r="0.8"
-            fill="#ffffff"
-            animate={{ opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        </svg>
+            {/* Clinical Eye SVG */}
+            <svg
+              width="46"
+              height="46"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--ink)"
+              strokeWidth="1.8"
+              style={{ position: 'relative', zIndex: 2 }}
+            >
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3.6" stroke="var(--ink)" strokeWidth="2" fill="#f8fafc" />
+              <motion.circle
+                cx="12"
+                cy="12"
+                r="2.1"
+                fill="var(--blue-600)"
+                animate={{
+                  scale: [1, 1.35, 1],
+                  fill: ['var(--blue-600)', '#60a5fa', 'var(--blue-600)'],
+                }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <motion.circle
+                cx="13.1"
+                cy="10.9"
+                r="0.8"
+                fill="#ffffff"
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            </svg>
+          </>
+        )}
       </div>
     </motion.div>
   );
@@ -139,7 +171,7 @@ function EyeLogo() {
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { isShinchanTheme } = useTheme();
+  const { theme, isMinionTheme, isShinchanTheme, isClinicalTheme } = useTheme();
   const { session, resetSession } = useSession();
 
   const handleStartScreening = () => {
@@ -154,7 +186,11 @@ export default function LandingPage() {
       <div
         style={{
           minHeight: '100vh',
-          background: isShinchanTheme ? '#FFFEEF' : '#ffffff',
+          background: isMinionTheme
+            ? '#FEFCE8'
+            : isShinchanTheme
+            ? '#FFFEEF'
+            : '#ffffff',
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
@@ -175,7 +211,7 @@ export default function LandingPage() {
             zIndex: 40,
           }}
         >
-          {/* Shinchan Logo brand badge in nav */}
+          {/* Logo brand badge in nav */}
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -190,7 +226,30 @@ export default function LandingPage() {
             }}
             title="GazeScreen Home"
           >
-            <ShinchanLogo size={36} />
+            {isMinionTheme ? (
+              <MinionLogo size={36} />
+            ) : isShinchanTheme ? (
+              <ShinchanLogo size={36} />
+            ) : (
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  border: '2px solid var(--ink)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'var(--yellow-400)',
+                  boxShadow: '2.5px 2.5px 0px var(--ink)',
+                  borderRadius: '3px',
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" fill="var(--ink)" />
+                </svg>
+              </div>
+            )}
             <span
               style={{
                 fontFamily: 'var(--font-mono)',
@@ -198,19 +257,31 @@ export default function LandingPage() {
                 color: 'var(--ink)',
                 fontSize: '1.05rem',
                 letterSpacing: '0.04em',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
               }}
             >
-              GAZE<span style={{ color: 'var(--orange-500)' }}>SCREEN</span>
+              GAZE
+              <span
+                style={{
+                  color: isMinionTheme
+                    ? '#245B9E'
+                    : 'var(--orange-500)',
+                }}
+              >
+                SCREEN
+              </span>
             </span>
           </button>
 
-          {/* Shinchan Theme Toggle */}
+          {/* Theme Toggle Segmented Control */}
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <ThemeToggle />
           </div>
         </nav>
 
-        {/* Hero Section with Authentic Shinchan Layer */}
+        {/* Hero Section with Authentic Theme Layer */}
         <main
           style={{
             flex: 1,
@@ -221,17 +292,87 @@ export default function LandingPage() {
             position: 'relative',
             overflow: 'hidden',
             zIndex: 5,
-            background: isShinchanTheme ? 'transparent' : '#ffffff',
+            background: isMinionTheme
+              ? '#FEFCE8'
+              : isShinchanTheme
+              ? '#FFFEEF'
+              : '#ffffff',
           }}
         >
-          {/* Section-specific doodle background that scrolls naturally with Hero */}
+          {/* Section-specific doodle background patterns */}
           <ComicBgPattern variant="doodle" opacity={0.30} />
-          {/* Flying Hero Mascot — scaled boldly and lifted towards middle for balanced hero flight composition */}
+          <MinionBgPattern opacity={0.26} />
+
+          {/* ── MINION HERO MASCOTS (Only rendered when Minion theme active) ── */}
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(35px, calc((100vw - 920px) / 2 - 70px), 170px)',
+              bottom: 'clamp(95px, 14vh, 175px)',
+              zIndex: 8,
+              pointerEvents: 'none',
+            }}
+          >
+            <MinionSticker delay={0.4} interactive={false}>
+              <HeroStuartMascot
+                size={235}
+                style={{
+                  width: 'clamp(165px, 16vw, 235px)',
+                  filter: 'drop-shadow(5px 7px 0px rgba(18,24,38,0.32))',
+                }}
+              />
+            </MinionSticker>
+          </div>
+
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(25px, 4.5vw, 85px)',
+              top: 'clamp(25px, 4.5vh, 80px)',
+              zIndex: 8,
+              pointerEvents: 'none',
+            }}
+          >
+            <MinionSticker delay={0.3} interactive={false}>
+              <FlyingSuperMinion
+                size={175}
+                style={{
+                  width: 'clamp(120px, 13vw, 185px)',
+                  filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.28))',
+                }}
+              />
+            </MinionSticker>
+          </div>
+
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(30px, 5.5vw, 110px)',
+              bottom: 'clamp(10px, 2vh, 30px)',
+              zIndex: 8,
+              pointerEvents: 'none',
+            }}
+          >
+            <MinionSticker delay={0.6} interactive={false}>
+              <CornerPeekingMinion
+                size={260}
+                style={{
+                  width: 'clamp(180px, 18vw, 260px)',
+                  filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.28))',
+                }}
+              />
+            </MinionSticker>
+          </div>
+
+          {/* ── SHINCHAN HERO MASCOTS (Only rendered when Shinchan theme active) ── */}
           <div
             className="shinchan-hide-mobile"
             style={{
               position: 'absolute',
-              right: 'clamp(10px, 3.5vw, 60px)',
+              right: 'clamp(25px, calc((100vw - 920px) / 2 - 130px), 110px)',
               bottom: 'clamp(115px, 16vh, 195px)',
               zIndex: 8,
               pointerEvents: 'none',
@@ -242,7 +383,6 @@ export default function LandingPage() {
             </ShinchanSticker>
           </div>
 
-          {/* Bumblebee Mascot — floating near top-left of hero */}
           <div
             className="shinchan-hide-mobile"
             style={{
@@ -258,7 +398,6 @@ export default function LandingPage() {
             </ShinchanSticker>
           </div>
 
-          {/* Party Shinchan Mascot (Peace sign & bowtie) — scaled up bold and prominent in bottom-left flank */}
           <div
             className="shinchan-hide-mobile"
             style={{
@@ -275,7 +414,7 @@ export default function LandingPage() {
           </div>
 
           <div style={{ maxWidth: 960, width: '100%', textAlign: 'center', position: 'relative', zIndex: 10 }}>
-            <EyeLogo />
+            <EyeLogo isMinionTheme={isMinionTheme} />
 
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -285,7 +424,7 @@ export default function LandingPage() {
             >
 
               <h1 className="text-display" style={{ marginBottom: 10 }}>
-                <ShinyText color="var(--ink)" shineColor="var(--blue-600)" speed={3.5}>
+                <ShinyText color="var(--ink)" shineColor="var(--blue-600, #2563eb)" speed={3.5}>
                   GAZESCREEN
                 </ShinyText>
               </h1>
@@ -293,16 +432,17 @@ export default function LandingPage() {
               <div
                 style={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '1.1rem',
+                  fontSize: '1.05rem',
                   fontWeight: 800,
-                  color: 'var(--orange-600)',
+                  color: isMinionTheme ? '#1E40AF' : 'var(--orange-600)',
                   marginBottom: '1.25rem',
                   letterSpacing: '-0.01em',
                   display: 'inline-block',
-                  background: 'var(--orange-50)',
-                  padding: '4px 12px',
-                  border: '1.5px solid var(--orange-400)',
-                  borderRadius: '3px',
+                  background: isMinionTheme ? '#FEF08A' : isShinchanTheme ? '#FFF7ED' : 'var(--orange-50)',
+                  padding: '4px 14px',
+                  border: (isMinionTheme || isShinchanTheme) ? '2px solid #111827' : '1.5px solid var(--orange-400)',
+                  borderRadius: '4px',
+                  boxShadow: (isMinionTheme || isShinchanTheme) ? '2px 2px 0px var(--ink)' : 'none',
                 }}
               >
                 Front-Camera Screening Aid for Pediatric ASD & ADHD
@@ -347,8 +487,9 @@ export default function LandingPage() {
                   flexWrap: 'wrap',
                 }}
               >
-                {/* Primary Action Button with Centered Comic Arrow */}
+                {/* Primary Action Button with Theme Prompts */}
                 <div style={{ position: 'relative' }}>
+                  {/* Shinchan Comic Arrow */}
                   {isShinchanTheme && (
                     <div
                       className="shinchan-hide-mobile"
@@ -384,6 +525,42 @@ export default function LandingPage() {
                     </div>
                   )}
 
+                  {/* Minion Banana Arrow */}
+                  {isMinionTheme && (
+                    <div
+                      className="minion-hide-mobile"
+                      style={{
+                        position: 'absolute',
+                        top: -36,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        pointerEvents: 'none',
+                        whiteSpace: 'nowrap',
+                        zIndex: 2,
+                      }}
+                    >
+                      <HandDrawnArrow direction="right-down" color="#EAB308" width={34} height={24} />
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.74rem',
+                          fontWeight: 900,
+                          color: '#854D0E',
+                          background: '#FEF9C3',
+                          padding: '3px 10px',
+                          border: '1.5px solid var(--ink)',
+                          borderRadius: '4px',
+                          boxShadow: '2px 2px 0px var(--ink)',
+                        }}
+                      >
+                        Bello! Tap here!
+                      </span>
+                    </div>
+                  )}
+
                   <MotionButton
                     variant="coral"
                     onClick={handleStartScreening}
@@ -415,7 +592,7 @@ export default function LandingPage() {
                 </MotionButton>
               </div>
 
-              {/* Row 2: Explore Research Model placed cleanly below the 2 buttons */}
+              {/* Row 2: Explore Research Model */}
               <div>
                 <MotionButton
                   variant="yellow"
@@ -435,20 +612,58 @@ export default function LandingPage() {
 
           </div>
         </main>
-
-
-
         {/* Feature Cards Section */}
         <section
           style={{
             padding: '3.5rem 1.5rem',
             borderTop: '2.5px solid var(--ink)',
-            background: isShinchanTheme ? '#FFFEEF' : '#fafaf9',
+            background: (isShinchanTheme || isMinionTheme) ? '#FFFEEF' : '#fafaf9',
             position: 'relative',
             zIndex: 5,
           }}
         >
-          {/* Action Punch Mascot in margin — bold scale like recruitment.githubsrmist.in */}
+          {/* ── MINION THEME ARCHITECTURE FLANKS ── */}
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(0.5rem, 3vw, 3.5rem)',
+              top: '8rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          >
+            <ScientistMinion
+              size={175}
+              alt="Scientist Minion AI Edge Model"
+              style={{
+                width: 'clamp(120px, 13vw, 175px)',
+                filter: 'drop-shadow(4px 5px 0px rgba(18,24,38,0.28))',
+              }}
+            />
+          </div>
+
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(0.5rem, 3vw, 3.5rem)',
+              top: '8rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          >
+            <GuitarStuart
+              size={170}
+              alt="Stuart Minion Rocking Guitar"
+              style={{
+                width: 'clamp(120px, 13vw, 175px)',
+                filter: 'drop-shadow(4px 5px 0px rgba(18,24,38,0.28))',
+              }}
+            />
+          </div>
+
+          {/* ── SHINCHAN THEME ARCHITECTURE FLANKS ── */}
           <div
             className="shinchan-hide-mobile"
             style={{
@@ -463,7 +678,6 @@ export default function LandingPage() {
             <ActionPunchMascot size={170} alt="Action Punch Shinchan" style={{ width: 'clamp(120px, 13vw, 180px)', filter: 'drop-shadow(4px 5px 0px rgba(18,24,38,0.22))' }} />
           </div>
 
-          {/* Laptop Coder Shinchan on right margin — authentic recruitment placement */}
           <div
             className="shinchan-hide-mobile"
             style={{
@@ -487,7 +701,7 @@ export default function LandingPage() {
               </div>
               <h2 className="text-section" style={{ marginTop: 4, position: 'relative', display: 'inline-block' }}>
                 Clinically Informed, Privacy-First
-                <SketchUnderline color="var(--yellow-400)" height={8} style={{ marginTop: 6 }} />
+                <SketchUnderline color={isMinionTheme ? '#FED41E' : 'var(--yellow-400)'} height={8} style={{ marginTop: 6 }} />
               </h2>
             </div>
 
@@ -496,10 +710,10 @@ export default function LandingPage() {
               style={{
                 position: 'relative',
                 overflow: 'visible',
-                border: isShinchanTheme ? '2px dashed rgba(18, 24, 38, 0.28)' : 'none',
+                border: (isShinchanTheme || isMinionTheme) ? '2px dashed rgba(18, 24, 38, 0.28)' : 'none',
                 borderRadius: '8px',
-                padding: isShinchanTheme ? '14px' : '0',
-                background: isShinchanTheme ? 'rgba(255, 255, 255, 0.45)' : 'transparent',
+                padding: (isShinchanTheme || isMinionTheme) ? '14px' : '0',
+                background: (isShinchanTheme || isMinionTheme) ? 'rgba(255, 255, 255, 0.75)' : 'transparent',
               }}
             >
               <div
@@ -615,9 +829,8 @@ export default function LandingPage() {
                 </div>
               </SpotlightCard>
 
-              {/* 4th card: Clean placement with Crayon mascot in header beside icon, zero text obstruction */}
               <SpotlightCard style={{ position: 'relative', padding: '1.6rem', background: '#ffffff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)', overflow: 'hidden' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: isShinchanTheme ? 'space-between' : 'flex-start', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
                   <div
                     style={{
                       width: 48,
@@ -652,18 +865,35 @@ export default function LandingPage() {
               </SpotlightCard>
               </div>
 
-              {/* Driving Pixel Car on top with zIndex 35 — 100% visible along the full circuit */}
-              <div
-                className="shinchan-hide-mobile"
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  pointerEvents: 'none',
-                  zIndex: 35,
-                }}
-              >
-                <DrivingPixelCar size={46} duration={14} />
-              </div>
+              {/* Driving Pixel Car on top for Shinchan Theme */}
+              {isShinchanTheme && (
+                <div
+                  className="shinchan-hide-mobile"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    pointerEvents: 'none',
+                    zIndex: 35,
+                  }}
+                >
+                  <DrivingPixelCar size={46} duration={14} />
+                </div>
+              )}
+
+              {/* Driving Minion Scooter on top for Minion Theme */}
+              {isMinionTheme && (
+                <div
+                  className="minion-hide-mobile"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    pointerEvents: 'none',
+                    zIndex: 35,
+                  }}
+                >
+                  <DrivingMinionScooter size={46} duration={14} />
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -674,15 +904,58 @@ export default function LandingPage() {
           style={{
             padding: '3.5rem 1.5rem',
             borderTop: '2.5px solid var(--ink)',
-            background: isShinchanTheme ? 'transparent' : '#ffffff',
+            background: isMinionTheme ? '#FEFCE8' : isShinchanTheme ? 'transparent' : '#ffffff',
             position: 'relative',
             zIndex: 5,
             overflow: 'hidden',
           }}
         >
-          {/* Section-specific doodle background that scrolls naturally with Section 3 */}
+          {/* Background patterns */}
           <ComicBgPattern variant="doodle" opacity={0.25} />
-          {/* Kantam Robo on left margin — bold scale from recruitment.githubsrmist.in */}
+          <MinionBgPattern opacity={0.24} />
+
+          {/* ── MINION HOW IT WORKS FLANKS ── */}
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(0.5rem, 3vw, 3.5rem)',
+              top: '4rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          >
+            <CaptainMinion
+              size={210}
+              alt="Captain Minion Shield Protocol"
+              style={{
+                width: 'clamp(145px, 16vw, 215px)',
+                filter: 'drop-shadow(5px 6px 0px rgba(18,24,38,0.3))',
+              }}
+            />
+          </div>
+
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(0.5rem, 3vw, 3.5rem)',
+              bottom: '4rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          >
+            <BananaEvilDuo
+              size={270}
+              alt="Minion Offering Banana"
+              style={{
+                width: 'clamp(180px, 20vw, 280px)',
+                filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.3))',
+              }}
+            />
+          </div>
+
+          {/* ── SHINCHAN HOW IT WORKS FLANKS ── */}
           <div
             className="shinchan-hide-mobile"
             style={{
@@ -697,7 +970,6 @@ export default function LandingPage() {
             <KantamRoboMascot size={240} alt="Kantam Robo Mascot" style={{ width: 'clamp(160px, 18vw, 240px)', filter: 'drop-shadow(5px 7px 0px rgba(18,24,38,0.28))' }} />
           </div>
 
-          {/* Action Kamen on right margin — authentic hero pairing */}
           <div
             className="shinchan-hide-mobile"
             style={{
@@ -712,7 +984,7 @@ export default function LandingPage() {
             <ActionKamenMascot size={180} alt="Action Kamen Superhero" style={{ width: 'clamp(130px, 14vw, 195px)', filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.25))' }} />
           </div>
 
-          <div style={{ maxWidth: isShinchanTheme ? 840 : 740, margin: '0 auto', position: 'relative', zIndex: 10 }}>
+          <div style={{ maxWidth: (isShinchanTheme || isMinionTheme) ? 840 : 740, margin: '0 auto', position: 'relative', zIndex: 10 }}>
             <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <span className="brutal-tag tag-orange">
@@ -726,10 +998,10 @@ export default function LandingPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {[
-                { num: '01', title: 'Parental Consent & Age Selection', desc: 'Confirm parental authorization, participant age, and clinical privacy consent.', color: 'var(--orange-500)', bg: '#fff7ed' },
-                { num: '02', title: 'Optical & Reticle Calibration', desc: 'Verify ambient lighting, face framing, and real-time iris contrast centering.', color: 'var(--blue-600)', bg: '#eff6ff' },
+                { num: '01', title: 'Parental Consent & Age Selection', desc: 'Confirm parental authorization, participant age, and clinical privacy consent.', color: isMinionTheme ? '#245B9E' : 'var(--orange-500)', bg: '#fff7ed' },
+                { num: '02', title: 'Optical & Reticle Calibration', desc: 'Verify ambient lighting, face framing, and real-time iris contrast centering.', color: isMinionTheme ? '#2563EB' : 'var(--blue-600)', bg: '#eff6ff' },
                 { num: '03', title: '60s Dual-Stimulus Protocol', desc: 'Child watches alternating social scenes and geometric fractal patterns to capture reflexive gaze preference.', color: 'var(--purple-600)', bg: '#faf5ff' },
-                { num: '04', title: 'Instant Comprehensive Report', desc: 'Instant on-device risk assessment, behavioral radar profile, and printable clinician summary.', color: 'var(--green-600)', bg: '#f0fdf4' },
+                { num: '04', title: 'Instant Comprehensive Report', desc: 'Instant on-device risk assessment, behavioral radar profile, and printable clinician summary.', color: isMinionTheme ? '#059669' : 'var(--green-600)', bg: '#f0fdf4' },
               ].map((step, idx) => (
                 <SpotlightCard
                   key={idx}
@@ -772,7 +1044,8 @@ export default function LandingPage() {
                         {step.desc}
                       </div>
                     </div>
-                    {/* Mascots placed on the SIDE of text for compact horizontal row */}
+
+                    {/* Shinchan theme step mascots */}
                     {isShinchanTheme && idx === 0 && (
                       <div style={{ marginLeft: 12, flexShrink: 0 }}>
                         <MisaeMotherMascot size={66} alt="Misae Nohara (Shinchan's Mother)" style={{ transform: 'scaleX(-1)', filter: 'drop-shadow(-2px 3px 0px rgba(18,24,38,0.2))' }} />
@@ -793,6 +1066,28 @@ export default function LandingPage() {
                         <ShinchanLetterMascot size={74} alt="Shinchan running with report letter and Shiro" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.2))' }} />
                       </div>
                     )}
+
+                    {/* Minion theme step mascots */}
+                    {isMinionTheme && idx === 0 && (
+                      <div style={{ marginLeft: 12, flexShrink: 0 }}>
+                        <RunningTourist size={62} alt="Tourist Minion Parental Authorization" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.2))' }} />
+                      </div>
+                    )}
+                    {isMinionTheme && idx === 1 && (
+                      <div style={{ marginLeft: 12, flexShrink: 0 }}>
+                        <GazeShiftMinion size={68} alt="Minion Gaze Tracking Calibration" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.2))' }} />
+                      </div>
+                    )}
+                    {isMinionTheme && idx === 2 && (
+                      <div style={{ marginLeft: 12, flexShrink: 0 }}>
+                        <ActionClawsMinion size={62} alt="Minion Stimulus Protocol" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.2))' }} />
+                      </div>
+                    )}
+                    {isMinionTheme && idx === 3 && (
+                      <div style={{ marginLeft: 12, flexShrink: 0 }}>
+                        <CelebratingBob size={66} alt="Celebrating Bob Screening Success" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.2))' }} />
+                      </div>
+                    )}
                   </div>
                 </SpotlightCard>
               ))}
@@ -800,7 +1095,126 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Vibrant Comic Red Call-to-Action Banner — inspired by recruitment.githubsrmist.in CTA */}
+        {/* ── MINION BANANA YELLOW CTA BANNER ── */}
+        {isMinionTheme && (
+        <section
+          style={{
+            background: '#FED41E',
+            borderTop: '3px solid var(--ink)',
+            borderBottom: '3px solid var(--ink)',
+            padding: '4rem 1.5rem',
+            textAlign: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+            zIndex: 5,
+          }}
+        >
+          {/* Flying Super Minion on left flank */}
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(1rem, 4vw, 5rem)',
+              bottom: '1rem',
+              pointerEvents: 'none',
+              zIndex: 8,
+            }}
+          >
+            <FlyingSuperMinion
+              size={185}
+              alt="Flying Superhero Minion"
+              style={{
+                width: 'clamp(130px, 14vw, 190px)',
+                filter: 'drop-shadow(5px 6px 0px rgba(18,24,38,0.32))',
+              }}
+            />
+          </div>
+
+          {/* Celebrating Bob on right flank */}
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(1rem, 4vw, 5rem)',
+              bottom: '1.2rem',
+              pointerEvents: 'none',
+              zIndex: 8,
+            }}
+          >
+            <CelebratingBob
+              size={140}
+              alt="Bob celebrating screening readiness"
+              style={{
+                width: 'clamp(100px, 10vw, 140px)',
+                filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.3))',
+              }}
+            />
+          </div>
+
+          <div style={{ maxWidth: 740, margin: '0 auto', position: 'relative', zIndex: 10 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <div
+                style={{
+                  background: '#DBEAFE',
+                  border: '2px solid var(--ink)',
+                  boxShadow: '2.5px 2.5px 0px var(--ink)',
+                  borderRadius: '9999px',
+                  padding: '5px 16px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.74rem',
+                  fontWeight: 900,
+                  color: '#1E40AF',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                READY TO BEGIN
+              </div>
+            </div>
+            <h2
+              style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 'clamp(1.85rem, 4.5vw, 2.85rem)',
+                fontWeight: 900,
+                color: '#111827',
+                letterSpacing: '-0.02em',
+                marginBottom: 12,
+                lineHeight: 1.15,
+              }}
+            >
+              Start the 60-Second Eye Screening
+            </h2>
+            <p
+              style={{
+                color: '#1F2937',
+                fontSize: '1rem',
+                lineHeight: 1.65,
+                maxWidth: 580,
+                margin: '0 auto 2.25rem',
+                fontWeight: 600,
+              }}
+            >
+              100% on-device iris telemetry, zero frames recorded, and immediate baseline report for pediatrician consultation.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <MotionButton
+                variant="blue"
+                onClick={handleStartScreening}
+                style={{ fontSize: '1.05rem', padding: '16px 36px', background: '#245B9E', color: '#ffffff' }}
+                icon={
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 8 }}>
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                }
+              >
+                Start Free Screening Now →
+              </MotionButton>
+            </div>
+          </div>
+        </section>
+        )}
+
+        {/* ── SHINCHAN COMIC RED CTA BANNER ── */}
         {isShinchanTheme && (
         <section
           style={{
@@ -836,7 +1250,7 @@ export default function LandingPage() {
             />
           </div>
 
-          {/* Shinchan & Shiro running with letter on right flank — flipped to charge towards the CTA button! */}
+          {/* Shinchan & Shiro running with letter on right flank */}
           <div
             className="shinchan-hide-mobile"
             style={{
@@ -923,7 +1337,8 @@ export default function LandingPage() {
         </section>
         )}
 
-        {/* Shinchan Comic Band Footer */}
+        {/* ── FOOTERS (Conditional per Theme) ── */}
+        <MinionFooter />
         <ShinchanFooter />
 
         {/* Clinical Disclaimer Footer */}
@@ -931,7 +1346,7 @@ export default function LandingPage() {
           style={{
             padding: '2.5rem 1.5rem',
             borderTop: '2.5px solid var(--ink)',
-            background: isShinchanTheme ? '#FFFEEF' : 'var(--yellow-50)',
+            background: isMinionTheme ? '#FEFCE8' : isShinchanTheme ? '#FFFEEF' : 'var(--yellow-50)',
             position: 'relative',
             zIndex: 5,
           }}

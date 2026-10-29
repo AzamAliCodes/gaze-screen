@@ -1,129 +1,202 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { useTheme } from '../context/ThemeContext';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, Check } from 'lucide-react';
+import { useTheme, THEMES } from '../context/ThemeContext';
+
+const THEME_OPTIONS = [
+  {
+    id: THEMES.MINION,
+    label: 'MINION',
+    btnBg: '#FEF08A',
+    btnColor: '#1E3A8A',
+    activeBg: '#FEF08A',
+    textColor: '#1E3A8A',
+  },
+  {
+    id: THEMES.SHINCHAN,
+    label: 'SHINCHAN',
+    btnBg: '#FFF7ED',
+    btnColor: 'var(--orange-600, #ea580c)',
+    activeBg: '#FFF7ED',
+    textColor: 'var(--orange-600, #ea580c)',
+  },
+  {
+    id: THEMES.CLINICAL,
+    label: 'OFF',
+    btnBg: '#F8FAFC',
+    btnColor: '#475569',
+    activeBg: '#F1F5F9',
+    textColor: '#334155',
+  },
+];
 
 export default function ThemeToggle({ className = '', style = {} }) {
-  const { isShinchanTheme, toggleShinchanTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  const activeOption = THEME_OPTIONS.find((opt) => opt.id === theme) || THEME_OPTIONS[0];
+
+  // Close on outside click or tap (handles both desktop mouse and mobile touch)
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside, { passive: true });
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (id) => {
+    setTheme(id);
+    setIsOpen(false);
+  };
 
   return (
-    <button
-      onClick={toggleShinchanTheme}
-      type="button"
-      className={`theme-toggle-btn ${className}`}
-      aria-label={`Toggle Shinchan mode (currently ${isShinchanTheme ? 'ON' : 'OFF'})`}
-      title={isShinchanTheme ? 'Turn Shinchan mode OFF' : 'Turn Shinchan mode ON'}
+    <div
+      ref={containerRef}
+      className={`theme-toggle-dropdown-wrapper ${className}`}
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 9,
-        padding: '4px 8px 4px 11px',
-        background: isShinchanTheme ? '#FFF7ED' : '#F8FAFC',
-        border: '2px solid var(--ink)',
-        borderRadius: '24px',
-        boxShadow: '2px 2px 0px var(--ink)',
-        cursor: 'pointer',
-        fontFamily: 'var(--font-mono)',
-        fontSize: '0.72rem',
-        fontWeight: 800,
-        color: isShinchanTheme ? 'var(--orange-600)' : 'var(--ink)',
-        userSelect: 'none',
-        transition: 'background 0.15s ease, color 0.15s ease',
+        position: 'relative',
+        display: 'inline-block',
+        zIndex: 50,
         ...style,
       }}
     >
-      <span style={{ letterSpacing: '0.03em', whiteSpace: 'nowrap' }}>
-        SHINCHAN MODE
-      </span>
-
-      {/* Switch track with ON / OFF text built inside the button itself */}
-      <div
+      {/* Dropdown Trigger Button */}
+      <button
+        type="button"
+        className="theme-toggle-btn"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        title="CHANGE VISUAL THEME"
         style={{
-          width: 52,
-          height: 22,
-          borderRadius: 11,
-          background: isShinchanTheme ? 'var(--orange-500)' : '#64748b',
-          border: '1.5px solid var(--ink)',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          boxSizing: 'border-box',
-          overflow: 'hidden',
-          transition: 'background 0.2s ease',
-          flexShrink: 0,
+          background: activeOption.btnBg,
+          color: activeOption.btnColor,
         }}
       >
-        {/* ON text inside the switch track */}
-        <motion.span
-          initial={false}
-          animate={{
-            opacity: isShinchanTheme ? 1 : 0,
-            x: isShinchanTheme ? 0 : -6,
-          }}
-          transition={{ duration: 0.18 }}
+        <span className="theme-toggle-btn-text" style={{ textTransform: 'uppercase' }}>
+          <span className="theme-toggle-prefix">THEME: </span>
+          <span className="theme-toggle-name">{activeOption.label}</span>
+        </span>
+        <ChevronDown
+          size={14}
+          strokeWidth={3}
           style={{
-            position: 'absolute',
-            left: 7,
-            top: 0,
-            bottom: 0,
-            display: 'flex',
-            alignItems: 'center',
-            fontSize: '0.62rem',
-            fontWeight: 900,
-            color: '#ffffff',
-            letterSpacing: '0.04em',
-            lineHeight: 1,
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-        >
-          ON
-        </motion.span>
-
-        {/* OFF text inside the switch track */}
-        <motion.span
-          initial={false}
-          animate={{
-            opacity: !isShinchanTheme ? 1 : 0,
-            x: !isShinchanTheme ? 0 : 6,
-          }}
-          transition={{ duration: 0.18 }}
-          style={{
-            position: 'absolute',
-            right: 6,
-            top: 0,
-            bottom: 0,
-            display: 'flex',
-            alignItems: 'center',
-            fontSize: '0.56rem',
-            fontWeight: 900,
-            color: '#ffffff',
-            letterSpacing: '0.04em',
-            lineHeight: 1,
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-        >
-          OFF
-        </motion.span>
-
-        {/* Sliding circle thumb knob */}
-        <motion.div
-          initial={false}
-          animate={{ x: isShinchanTheme ? 30 : 2 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          style={{
-            position: 'absolute',
-            top: 2,
-            left: 1,
-            width: 14,
-            height: 14,
-            borderRadius: '50%',
-            background: '#ffffff',
-            border: '1.5px solid var(--ink)',
-            boxShadow: '1px 1px 0px var(--ink)',
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease',
+            color: activeOption.btnColor,
+            flexShrink: 0,
           }}
         />
-      </div>
-    </button>
+      </button>
+
+      {/* Dropdown Menu */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            role="listbox"
+            aria-label="SELECT THEME"
+            className="theme-toggle-menu"
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 6px)',
+              right: 0,
+              minWidth: 165,
+              maxWidth: 'calc(100vw - 24px)',
+              background: '#FFFFFF',
+              border: '2.5px solid var(--ink)',
+              borderRadius: '8px',
+              boxShadow: '4px 4px 0px var(--ink)',
+              padding: '6px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              zIndex: 100,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.62rem',
+                fontWeight: 900,
+                color: 'var(--ink-secondary)',
+                letterSpacing: '0.08em',
+                padding: '4px 8px 3px',
+                textTransform: 'uppercase',
+                borderBottom: '1.5px solid #E2E8F0',
+                marginBottom: 2,
+              }}
+            >
+              SELECT THEME
+            </div>
+
+            {THEME_OPTIONS.map((opt) => {
+              const isSelected = theme === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => handleSelect(opt.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 8,
+                    padding: '8px 10px',
+                    minHeight: '38px',
+                    background: isSelected ? opt.activeBg : 'transparent',
+                    border: isSelected ? '1.5px solid var(--ink)' : '1.5px solid transparent',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.74rem',
+                    fontWeight: isSelected ? 800 : 700,
+                    color: isSelected ? opt.textColor : 'var(--ink)',
+                    textAlign: 'left',
+                    textTransform: 'uppercase',
+                    transition: 'background 0.12s ease',
+                    outline: 'none',
+                    touchAction: 'manipulation',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) e.currentTarget.style.background = '#F8FAFC';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ textTransform: 'uppercase' }}>{opt.label}</span>
+                  </div>
+                  {isSelected && <Check size={14} strokeWidth={3} style={{ color: opt.textColor }} />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

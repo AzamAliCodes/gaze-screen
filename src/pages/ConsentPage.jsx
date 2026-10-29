@@ -17,11 +17,20 @@ import {
 } from '../components/shinchan/ShinchanMascots';
 import SpeechBubble from '../components/shinchan/SpeechBubble';
 import { HandDrawnArrow } from '../components/shinchan/DoodleDecorations';
+import {
+  WavingStuart,
+  RunningTourist,
+  CelebratingBob,
+  DrivingMinionScooter,
+  MinionBgPattern,
+} from '../components/minion/MinionMascots';
+import MinionSpeechBubble from '../components/minion/MinionSpeechBubble';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
 
 function NavBar() {
   const navigate = useNavigate();
+  const { isMinionTheme } = useTheme();
   return (
     <nav
       style={{
@@ -57,7 +66,7 @@ function NavBar() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <polyline points="15 18 9 12 15 6" />
         </svg>
-        GAZE<span style={{ color: 'var(--orange-500)' }}>SCREEN</span>
+        GAZE<span style={{ color: isMinionTheme ? '#245B9E' : 'var(--orange-500)' }}>SCREEN</span>
       </button>
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -232,7 +241,7 @@ function ConsentClause({ svgIcon, tag, text, checked, onChange, checkedColor = '
 
 export default function ConsentPage() {
   const navigate = useNavigate();
-  const { isShinchanTheme } = useTheme();
+  const { isMinionTheme, isShinchanTheme } = useTheme();
   const { session, updateSession, resetSession } = useSession();
 
   // If coming from a completed scan session, start completely fresh
@@ -318,8 +327,9 @@ export default function ConsentPage() {
 
   return (
     <PageTransition>
-      <div style={{ minHeight: '100vh', background: isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <div style={{ minHeight: '100vh', background: isMinionTheme ? '#FEFCE8' : isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
         <ComicBgPattern variant="doodle" opacity={0.28} />
+        <MinionBgPattern opacity={0.26} />
         <NavBar />
 
         <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem', position: 'relative' }}>
@@ -327,7 +337,7 @@ export default function ConsentPage() {
             {/* Header */}
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '1rem', position: 'relative', zIndex: 10 }}>
               <h1 className="text-section" style={{ marginTop: 2, marginBottom: 2, fontSize: '1.65rem' }}>
-                <ShinyText color="var(--ink)" shineColor="var(--blue-600)">
+                <ShinyText color="var(--ink)" shineColor={isMinionTheme ? '#245B9E' : 'var(--blue-600)'}>
                   Participant Details &amp; Consent
                 </ShinyText>
               </h1>
@@ -336,8 +346,48 @@ export default function ConsentPage() {
               </p>
             </motion.div>
 
-            {/* Demographic Profile Card — Flanked by Shinchan (left) and Misae (right pointing "Fill this!") */}
+            {/* Demographic Profile Card — Flanked by Shinchan/Minion mascots */}
             <div style={{ position: 'relative', marginBottom: '1.25rem' }}>
+              {isMinionTheme && (
+                <>
+                  <div
+                    className="minion-hide-mobile"
+                    style={{
+                      position: 'absolute',
+                      right: 'calc(100% + 22px)',
+                      top: 8,
+                      pointerEvents: 'none',
+                      zIndex: 5,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <MinionSpeechBubble text="Bello! 60s test!" direction="bottom-right" variant="yellow" size="sm" />
+                    <RunningTourist size={165} alt="Tourist Minion ready for screening" style={{ filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.26))' }} />
+                  </div>
+
+                  <div
+                    className="minion-hide-mobile"
+                    style={{
+                      position: 'absolute',
+                      left: 'calc(100% + 22px)',
+                      top: 8,
+                      pointerEvents: 'none',
+                      zIndex: 5,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <MinionSpeechBubble text="Fill the details here!" direction="bottom-left" variant="blue" size="sm" />
+                    <WavingStuart size={150} alt="Waving Stuart Minion" style={{ filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.26))' }} />
+                  </div>
+                </>
+              )}
+
               {isShinchanTheme && (
                 <>
                   {/* Shinchan with Backpack on Left Outer Flank — grounded with card base */}
@@ -395,6 +445,10 @@ export default function ConsentPage() {
                 {/* Driving Pixel Car running along card perimeter */}
                 <div className="shinchan-hide-mobile">
                   <DrivingPixelCar size={38} duration={14} />
+                </div>
+                {/* Driving Minion Scooter running along card perimeter */}
+                <div className="minion-hide-mobile">
+                  <DrivingMinionScooter size={44} duration={14} />
                 </div>
 
                 <div
@@ -662,6 +716,24 @@ export default function ConsentPage() {
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                {/* Minion cheering beside Begin button */}
+                {isMinionTheme && (
+                  <div
+                    className="minion-hide-mobile"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <MinionSpeechBubble
+                      text={canProceed ? 'Banana! All ready to screen!' : 'Fill details & accept all 4!'}
+                      variant={canProceed ? 'yellow' : 'blue'}
+                    />
+                    <CelebratingBob size={145} alt="Celebrating Bob Minion" style={{ filter: 'drop-shadow(3px 5px 0px rgba(18,24,38,0.24))' }} />
+                  </div>
+                )}
+
                 {/* Action Kamen cheering beside the Begin button */}
                 {isShinchanTheme && (
                   <div

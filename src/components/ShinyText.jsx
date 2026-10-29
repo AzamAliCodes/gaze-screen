@@ -1,14 +1,13 @@
-import { motion } from 'framer-motion';
-
 /**
  * ShinyText — React Bits component pattern
  * Renders an elegant animated metallic/color shine sweep across typography.
+ * Uses CSS background-clip: text with rock-solid flash protection during theme transitions.
  */
 export default function ShinyText({
   children,
   className = '',
-  color = '#0f172a',
-  shineColor = '#22c55e',
+  color = 'var(--ink, #121826)',
+  shineColor = 'var(--blue-600, #2563eb)',
   speed = 3,
   style = {},
 }) {

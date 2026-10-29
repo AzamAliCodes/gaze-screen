@@ -13,6 +13,10 @@ import { deriveMetrics, computeRiskScore } from '../lib/classifier';
 import {
   PartyShinchanMascot,
 } from '../components/shinchan/ShinchanMascots';
+import {
+  AdoringBob,
+} from '../components/minion/MinionMascots';
+import MinionSpeechBubble from '../components/minion/MinionSpeechBubble';
 import { useTheme } from '../context/ThemeContext';
 import SpeechBubble from '../components/shinchan/SpeechBubble';
 import ComicStamp from '../components/shinchan/ComicStamp';
@@ -20,7 +24,7 @@ import ComicStamp from '../components/shinchan/ComicStamp';
 export default function StimulusPage() {
   const navigate = useNavigate();
   const { session, updateSession, addGazePoint, addBlinkEvent } = useSession();
-  const { isShinchanTheme } = useTheme();
+  const { theme, isMinionTheme, isShinchanTheme, isClinicalTheme } = useTheme();
 
   const [phase, setPhase] = useState(null);
   const [progress, setProgress] = useState(0);
@@ -517,6 +521,17 @@ export default function StimulusPage() {
                       <Music size={11} strokeWidth={2.5} /> AUDIO MELODY READY
                     </span>
                   </div>
+
+                  {/* Minion Mascot Encouragement during Countdown */}
+                  {isMinionTheme && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '6px 0' }}>
+                      <AdoringBob size={85} alt="Bob Minion Encouraging" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.24))' }} />
+                      <MinionSpeechBubble
+                        text="Bello! Watch the screen & follow the shapes!"
+                        variant="yellow"
+                      />
+                    </div>
+                  )}
 
                   {/* Shinchan Mascot Encouragement during Countdown */}
                   {isShinchanTheme && (
