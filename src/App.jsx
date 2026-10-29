@@ -7,23 +7,26 @@ import AnalysisPage from './pages/AnalysisPage';
 import ReportPage from './pages/ReportPage';
 import ResearchPage from './pages/ResearchPage';
 import { SessionProvider } from './context/SessionContext';
+import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
 function App() {
   return (
-    <SessionProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/"            element={<LandingPage />} />
-          <Route path="/consent"     element={<ConsentPage />} />
-          <Route path="/calibration" element={<CalibrationPage />} />
-          <Route path="/stimulus"    element={<StimulusPage />} />
-          <Route path="/analysis"    element={<AnalysisPage />} />
-          <Route path="/report"      element={<ReportPage />} />
-          <Route path="/research"    element={<ResearchPage />} />
-        </Routes>
-      </BrowserRouter>
-    </SessionProvider>
+    <ThemeProvider>
+      <SessionProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/"            element={<LandingPage />} />
+            <Route path="/consent"     element={<ConsentPage />} />
+            <Route path="/calibration" element={<CalibrationPage />} />
+            <Route path="/stimulus"    element={<StimulusPage />} />
+            <Route path="/analysis"    element={<AnalysisPage />} />
+            <Route path="/report"      element={<ReportPage />} />
+            <Route path="/research"    element={<ResearchPage />} />
+          </Routes>
+        </BrowserRouter>
+      </SessionProvider>
+    </ThemeProvider>
   );
 }
 

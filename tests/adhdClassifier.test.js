@@ -48,8 +48,10 @@ test('ADHD subject with high social attention correctly receives a moderate/elev
     const cy = 0.5 + ((cluster * 13) % 9 - 4) * 0.09;
     const spread = isSecondHalf ? 0.06 : 0.02;
     for (let s = 0; s < dwell && t < start + 30000; s++) {
-      const x = Math.max(0.05, Math.min(0.95, cx + (Math.random() - 0.5) * spread));
-      const y = Math.max(0.05, Math.min(0.95, cy + (Math.random() - 0.5) * spread));
+      const pseudoRandX = (Math.sin(t * 0.01) + 1) / 2;
+      const pseudoRandY = (Math.cos(t * 0.01) + 1) / 2;
+      const x = Math.max(0.05, Math.min(0.95, cx + (pseudoRandX - 0.5) * spread));
+      const y = Math.max(0.05, Math.min(0.95, cy + (pseudoRandY - 0.5) * spread));
       // Normal social attention preference (looking at faces)
       points.push({ x, y, timestamp: t, phase: 'social' });
       t += 33;
@@ -81,8 +83,10 @@ test('neurotypical steady gaze profile yields typical low-risk attention index',
     const cx = 0.5 + ((cluster * 3) % 5 - 2) * 0.04;
     const cy = 0.5 + ((cluster * 5) % 5 - 2) * 0.04;
     for (let s = 0; s < dwell && t < start + 30000; s++) {
-      const x = Math.max(0.1, Math.min(0.9, cx + (Math.random() - 0.5) * 0.02));
-      const y = Math.max(0.1, Math.min(0.9, cy + (Math.random() - 0.5) * 0.02));
+      const pseudoRandX = (Math.sin(t * 0.01) + 1) / 2;
+      const pseudoRandY = (Math.cos(t * 0.01) + 1) / 2;
+      const x = Math.max(0.1, Math.min(0.9, cx + (pseudoRandX - 0.5) * 0.02));
+      const y = Math.max(0.1, Math.min(0.9, cy + (pseudoRandY - 0.5) * 0.02));
       points.push({ x, y, timestamp: t, phase: 'social' });
       t += 33;
     }

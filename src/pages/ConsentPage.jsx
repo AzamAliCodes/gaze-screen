@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Check } from 'lucide-react';
@@ -8,6 +8,17 @@ import ShinyText from '../components/ShinyText';
 import SpotlightCard from '../components/SpotlightCard';
 import { useSession } from '../context/SessionContext';
 import { getCohortInfo } from '../lib/classifier';
+import {
+  MisaeMotherMascot,
+  ActionKamenMascot,
+  ShinchanBackpackMascot,
+  DrivingPixelCar,
+  ComicBgPattern,
+} from '../components/shinchan/ShinchanMascots';
+import SpeechBubble from '../components/shinchan/SpeechBubble';
+import { HandDrawnArrow } from '../components/shinchan/DoodleDecorations';
+import { useTheme } from '../context/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 function NavBar() {
   const navigate = useNavigate();
@@ -17,7 +28,7 @@ function NavBar() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '1rem 2rem',
+        padding: '0.65rem 1.5rem',
         borderBottom: '2.5px solid var(--ink)',
         background: '#ffffff',
         position: 'sticky',
@@ -27,6 +38,8 @@ function NavBar() {
     >
       <button
         onClick={() => navigate('/')}
+        type="button"
+        title="Navigate to Home"
         style={{
           background: 'none',
           border: 'none',
@@ -47,8 +60,10 @@ function NavBar() {
         GAZE<span style={{ color: 'var(--orange-500)' }}>SCREEN</span>
       </button>
 
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        {[1, 2, 3, 4].map((i) => (
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <ThemeToggle />
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
             style={{
@@ -76,12 +91,28 @@ function NavBar() {
         >
           STEP 1/4
         </span>
+        </div>
       </div>
     </nav>
   );
 }
 
-function FormField({ label, type = 'text', value, onChange, onKeyDown, placeholder, required, min, max }) {
+function FormField({
+  label,
+  type = 'text',
+  value,
+  onChange,
+  onKeyDown,
+  onPaste,
+  placeholder,
+  required,
+  min,
+  max,
+  inputMode,
+  pattern,
+  maxLength,
+  title,
+}) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <label
@@ -101,9 +132,14 @@ function FormField({ label, type = 'text', value, onChange, onKeyDown, placehold
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
+        onPaste={onPaste}
         placeholder={placeholder}
         min={min}
         max={max}
+        inputMode={inputMode}
+        pattern={pattern}
+        maxLength={maxLength}
+        title={title}
         style={{
           background: '#ffffff',
           border: '2px solid var(--ink)',
@@ -196,10 +232,30 @@ function ConsentClause({ svgIcon, tag, text, checked, onChange, checkedColor = '
 
 export default function ConsentPage() {
   const navigate = useNavigate();
-  const { updateSession } = useSession();
+  const { isShinchanTheme } = useTheme();
+  const { session, updateSession, resetSession } = useSession();
 
-  const [form, setForm] = useState({ parentName: '', childName: '', childAge: '' });
-  const [consents, setConsents] = useState({ camera: false, noVideo: false, notDiagnosis: false, age: false });
+  // If coming from a completed scan session, start completely fresh
+  const isCompletedSession = Boolean(session?.completed);
+
+  const [form, setForm] = useState({
+    parentName: isCompletedSession ? '' : (session?.parentName || ''),
+    childName: isCompletedSession ? '' : (session?.childName || ''),
+    childAge: isCompletedSession ? '' : (session?.childAge || ''),
+  });
+  const [consents, setConsents] = useState({
+    camera: isCompletedSession ? false : Boolean(session?.consentGiven),
+    noVideo: isCompletedSession ? false : Boolean(session?.consentGiven),
+    notDiagnosis: isCompletedSession ? false : Boolean(session?.consentGiven),
+    age: isCompletedSession ? false : Boolean(session?.consentGiven),
+  });
+
+  // Purge any completed session cache from browser so new entry is clean
+  useEffect(() => {
+    if (isCompletedSession) {
+      resetSession();
+    }
+  }, [isCompletedSession, resetSession]);
 
   const isAgeEntered = form.childAge.trim().length > 0;
   const numAge = parseInt(form.childAge, 10);
@@ -210,8 +266,8 @@ export default function ConsentPage() {
   const canProceed = allConsented && formFilled;
 
   const handleAgeChange = (raw) => {
-    // Strictly positive integers: strip any non-digit character (blocking minus signs, commas, decimals, exponents)
-    const digitsOnly = String(raw).replace(/\D/g, '');
+    // Strictly positive integers (1–99): strip non-digits and leading zeros
+    const digitsOnly = String(raw).replace(/\D/g, '').replace(/^0+/, '');
     if (!digitsOnly) {
       setForm((p) => ({ ...p, childAge: '' }));
       return;
@@ -225,10 +281,29 @@ export default function ConsentPage() {
   };
 
   const handleAgeKeyDown = (e) => {
-    // Prevent negative signs, plus, exponents, and decimals on keyboard input
-    if (['-', '+', 'e', 'E', '.'].includes(e.key)) {
+    // Allow keyboard navigation & shortcuts (Backspace, Delete, Tab, Arrow keys, Home, End, Enter, Ctrl/Cmd shortcuts)
+    if (
+      ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter'].includes(e.key) ||
+      e.ctrlKey ||
+      e.metaKey
+    ) {
+      return;
+    }
+    // Block non-digits (minus sign, plus, decimal, exponential e, letters, symbols)
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
+      return;
+    }
+    // Block '0' if the field is currently empty (enforcing positive numbers only)
+    if (e.key === '0' && (!form.childAge || form.childAge.length === 0)) {
       e.preventDefault();
     }
+  };
+
+  const handleAgePaste = (e) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData ? e.clipboardData.getData('text') : '';
+    handleAgeChange(pastedText);
   };
 
   const handleProceed = () => {
@@ -243,50 +318,104 @@ export default function ConsentPage() {
 
   return (
     <PageTransition>
-      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100vh', background: isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <ComicBgPattern variant="doodle" opacity={0.28} />
         <NavBar />
 
-        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 1.5rem' }}>
-          <div style={{ maxWidth: 740, width: '100%' }}>
+        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem', position: 'relative' }}>
+          <div style={{ maxWidth: 780, width: '100%', position: 'relative', zIndex: 10 }}>
             {/* Header */}
-            <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <span className="brutal-tag tag-blue">Screening Intake</span>
-                <span className="brutal-tag tag-yellow">All Ages Supported</span>
-              </div>
-              <h1 className="text-section" style={{ marginTop: 6, marginBottom: 8, fontSize: '2rem' }}>
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '1rem', position: 'relative', zIndex: 10 }}>
+              <h1 className="text-section" style={{ marginTop: 2, marginBottom: 2, fontSize: '1.65rem' }}>
                 <ShinyText color="var(--ink)" shineColor="var(--blue-600)">
-                  Participant Details & Protocol Consent
+                  Participant Details &amp; Consent
                 </ShinyText>
               </h1>
-              <p style={{ color: 'var(--ink-secondary)', fontSize: '0.94rem', lineHeight: 1.6 }}>
-                Before beginning the 60-second digital screening, enter the participant details and
-                review the clinical rationale and privacy safeguards below.
+              <p style={{ color: 'var(--ink-secondary)', fontSize: '0.84rem', lineHeight: 1.45, margin: 0 }}>
+                Enter participant demographic details and confirm parental declarations to begin the 60-second natural viewing assessment.
               </p>
             </motion.div>
 
-            {/* Form Section */}
-            <SpotlightCard style={{ padding: '2rem', marginBottom: '1.5rem', background: '#eff6ff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '0.82rem',
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  color: 'var(--ink)',
-                  marginBottom: '1.25rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                <span style={{ width: 10, height: 10, background: 'var(--blue-600)', display: 'inline-block' }} />
-                Demographic Profile
-              </div>
+            {/* Demographic Profile Card — Flanked by Shinchan (left) and Misae (right pointing "Fill this!") */}
+            <div style={{ position: 'relative', marginBottom: '1.25rem' }}>
+              {isShinchanTheme && (
+                <>
+                  {/* Shinchan with Backpack on Left Outer Flank — grounded with card base */}
+                  <div
+                    className="shinchan-hide-mobile"
+                    style={{
+                      position: 'absolute',
+                      right: 'calc(100% + 20px)',
+                      bottom: 4,
+                      pointerEvents: 'none',
+                      zIndex: 5,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <SpeechBubble tail="bottom-right" variant="coral" size="sm">
+                      <span>Ready for 60s test!</span>
+                    </SpeechBubble>
+                    <ShinchanBackpackMascot size={125} alt="Shinchan with school backpack" style={{ filter: 'drop-shadow(3px 5px 0px rgba(18,24,38,0.24))' }} />
+                  </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: 16 }}>
+                  {/* Misae (Mother) on Right Outer Flank — flipped so her gesturing hand points directly at the inputs! */}
+                  <div
+                    className="shinchan-hide-mobile"
+                    style={{
+                      position: 'absolute',
+                      left: 'calc(100% + 20px)',
+                      bottom: 4,
+                      pointerEvents: 'none',
+                      zIndex: 5,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <SpeechBubble tail="bottom-right" variant="yellow" size="sm">
+                      <span>Fill details here!</span>
+                    </SpeechBubble>
+                    <MisaeMotherMascot
+                      size={135}
+                      alt="Misae Nohara"
+                      style={{
+                        transform: 'scaleX(-1)',
+                        filter: 'drop-shadow(-3px 5px 0px rgba(18,24,38,0.24))',
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+
+              <SpotlightCard style={{ position: 'relative', padding: '1.35rem 1.5rem', background: '#eff6ff', border: '2.5px solid var(--ink)', boxShadow: '4px 4px 0px var(--ink)', overflow: 'visible' }}>
+                {/* Driving Pixel Car running along card perimeter */}
+                <div className="shinchan-hide-mobile">
+                  <DrivingPixelCar size={38} duration={14} />
+                </div>
+
+                <div
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    color: 'var(--ink)',
+                    marginBottom: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <span style={{ width: 10, height: 10, background: 'var(--blue-600)', display: 'inline-block' }} />
+                  Demographic Profile
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 210px), 1fr))', gap: 14 }}>
                   <FormField
                     label="Parent / Observer Name"
                     value={form.parentName}
@@ -303,13 +432,16 @@ export default function ConsentPage() {
                   />
                   <FormField
                     label="Subject's Age"
-                    type="number"
-                    min="1"
-                    max="99"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={2}
                     value={form.childAge}
                     onChange={handleAgeChange}
                     onKeyDown={handleAgeKeyDown}
+                    onPaste={handleAgePaste}
                     placeholder="e.g. 6"
+                    title="Enter positive age in years (1–99)"
                     required
                   />
                 </div>
@@ -317,66 +449,69 @@ export default function ConsentPage() {
                 {isValidAge ? (
                   <div
                     style={{
-                      padding: '10px 14px',
+                      marginTop: 12,
+                      padding: '8px 12px',
                       borderRadius: '4px',
-                      border: '2px solid var(--ink)',
+                      border: '1.5px solid var(--ink)',
                       background: cohort.badgeBg,
-                      boxShadow: '2.5px 2.5px 0px var(--ink)',
+                      boxShadow: '1.5px 1.5px 0px var(--ink)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       flexWrap: 'wrap',
-                      gap: 8,
+                      gap: 6,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span
                         style={{
-                          width: 8,
-                          height: 8,
+                          width: 7,
+                          height: 7,
                           borderRadius: '50%',
                           background: cohort.badgeColor,
                           display: 'inline-block',
                         }}
                       />
-                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.84rem', color: 'var(--ink)' }}>
-                        Age Group: {cohort.title}
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.8rem', color: 'var(--ink)' }}>
+                        Cohort: {cohort.title}
                       </span>
                     </div>
-                    <span className={`brutal-tag ${cohort.badgeClass}`} style={{ fontSize: '0.68rem', padding: '2px 8px' }}>
+                    <span className={`brutal-tag ${cohort.badgeClass}`} style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
                       ● AGE {numAge}
                     </span>
                   </div>
                 ) : isAgeEntered ? (
                   <div
                     style={{
-                      padding: '10px 14px',
+                      marginTop: 12,
+                      padding: '8px 12px',
                       borderRadius: '4px',
-                      border: '2px dashed var(--red-primary)',
+                      border: '1.5px dashed var(--red-primary)',
                       background: '#fef2f2',
                       color: 'var(--red-primary)',
-                      fontSize: '0.82rem',
+                      fontSize: '0.78rem',
                       fontFamily: 'var(--font-mono)',
                       fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <AlertTriangle size={14} color="var(--red-primary)" strokeWidth={2.5} />
-                      <span>Please enter a valid positive age between 1 and 99 years.</span>
-                    </div>
+                    <AlertTriangle size={14} color="var(--red-primary)" strokeWidth={2.5} />
+                    <span>Enter valid positive age (1–99 years).</span>
                   </div>
                 ) : null}
-              </div>
-            </SpotlightCard>
+              </SpotlightCard>
+            </div>
 
-            {/* Required Consents */}
-            <SpotlightCard style={{ padding: '2rem', marginBottom: '2rem', background: '#fafaf9', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
+            {/* Mandatory Declarations Card — Stacked below Demographic Card with original clinical text and symbols */}
+            <SpotlightCard style={{ padding: '1.5rem 1.75rem', background: '#fafaf9', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)', marginBottom: '1.5rem' }}>
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  marginBottom: '1.25rem',
+                  marginBottom: '1.15rem',
                   flexWrap: 'wrap',
                   gap: 8,
                 }}
@@ -384,7 +519,7 @@ export default function ConsentPage() {
                 <div
                   style={{
                     fontFamily: 'var(--font-mono)',
-                    fontSize: '0.82rem',
+                    fontSize: '0.85rem',
                     fontWeight: 800,
                     textTransform: 'uppercase',
                     letterSpacing: '0.08em',
@@ -395,7 +530,7 @@ export default function ConsentPage() {
                   }}
                 >
                   <span style={{ width: 10, height: 10, background: 'var(--orange-500)', display: 'inline-block' }} />
-                  Mandatory Declarations
+                  <span>Mandatory Declarations</span>
                 </div>
                 <button
                   type="button"
@@ -407,9 +542,9 @@ export default function ConsentPage() {
                     background: allConsented ? 'var(--green-100)' : '#ffffff',
                     border: '1.5px solid var(--ink)',
                     borderRadius: '3px',
-                    padding: '3px 10px',
+                    padding: '4px 12px',
                     fontFamily: 'var(--font-mono)',
-                    fontSize: '0.72rem',
+                    fontSize: '0.74rem',
                     fontWeight: 800,
                     color: 'var(--ink)',
                     cursor: 'pointer',
@@ -489,23 +624,77 @@ export default function ConsentPage() {
               </div>
             </SpotlightCard>
 
-            {/* Bottom Actions */}
+            {/* Bottom Actions Bar — Action Kamen beside the Begin Screening button */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 14,
+                flexWrap: 'wrap',
+              }}
             >
-              {!canProceed && (
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--ink-muted)', fontWeight: 600 }}>
-                  {!formFilled ? 'Complete demographic details' : 'Accept all 4 declarations to proceed'}
-                </span>
-              )}
-              <MotionButton variant="coral" onClick={handleProceed} disabled={!canProceed}>
-                Continue to Camera Calibration
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: 6 }}>
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </MotionButton>
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                style={{
+                  background: '#FEE883',
+                  border: '2px solid var(--ink)',
+                  boxShadow: '2.5px 2.5px 0px var(--ink)',
+                  borderRadius: '9999px',
+                  padding: '9px 16px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.78rem',
+                  fontWeight: 900,
+                  color: '#1E1B24',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  transition: 'transform 0.1s ease',
+                }}
+                onMouseDown={(e) => { e.currentTarget.style.transform = 'translate(2px, 2px)'; }}
+                onMouseUp={(e) => { e.currentTarget.style.transform = 'none'; }}
+              >
+                ← BACK TO HOME
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                {/* Action Kamen cheering beside the Begin button */}
+                {isShinchanTheme && (
+                  <div
+                    className="shinchan-hide-mobile"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <SpeechBubble tail="right" variant={canProceed ? 'green' : 'yellow'} size="sm">
+                      <span>{canProceed ? 'Action Kamen Approved! 60-Sec Screening Ready!' : 'Fill details & accept all 4 to begin!'}</span>
+                    </SpeechBubble>
+                    <ActionKamenMascot size={115} alt="Action Kamen Superhero" style={{ filter: 'drop-shadow(3px 5px 0px rgba(18,24,38,0.24))' }} />
+                  </div>
+                )}
+
+                <MotionButton
+                  variant="coral"
+                  onClick={handleProceed}
+                  disabled={!canProceed}
+                  style={{
+                    fontSize: '0.94rem',
+                    padding: '12px 24px',
+                    boxShadow: canProceed ? '3.5px 4.5px 0px var(--ink)' : 'none',
+                  }}
+                >
+                  <span>Begin 60-Second Screening</span>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" style={{ marginLeft: 8 }}>
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </MotionButton>
+              </div>
             </motion.div>
           </div>
         </main>

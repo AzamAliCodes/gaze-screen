@@ -9,6 +9,22 @@ import GazeHeatmap from '../components/GazeHeatmap';
 import { BrutalDivider } from '../components/UI';
 import { useSession } from '../context/SessionContext';
 import { getCohortInfo } from '../lib/classifier';
+import {
+  OperationsLeadMascot,
+  ActionKamenMascot,
+  CrayonCreatorMascot,
+  RolePigMascot,
+  ShinchanLetterMascot,
+  RobotDadFamilyMascot,
+  DrivingPixelCar,
+  ShinchanLogo,
+  ShinchanShiroRelaxMascot,
+  ComicBgPattern,
+} from '../components/shinchan/ShinchanMascots';
+import ComicStamp from '../components/shinchan/ComicStamp';
+import { useTheme } from '../context/ThemeContext';
+import ThemeToggle from '../components/ThemeToggle';
+import { HandDrawnArrow } from '../components/shinchan/DoodleDecorations';
 
 /* ── Clinical Risk Level Configurations ───────────────────────── */
 const RISK_CONFIG = {
@@ -322,9 +338,27 @@ function MetricRow({ label, value, unit, normRange, delay = 0 }) {
 
 export default function ReportPage() {
   const navigate = useNavigate();
+  const { isShinchanTheme } = useTheme();
   const { session, resetSession } = useSession();
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [showBiomarkerFaq, setShowBiomarkerFaq] = useState(false);
+
+  // Route guard: if user accesses /report directly without filling participant details & consent, redirect to /consent
+  const hasConsent = Boolean(
+    session?.consentGiven &&
+    session?.parentName?.trim() &&
+    session?.childName?.trim() &&
+    session?.childAge &&
+    !isNaN(parseInt(session.childAge, 10)) &&
+    parseInt(session.childAge, 10) >= 1 &&
+    parseInt(session.childAge, 10) <= 99
+  );
+
+  useEffect(() => {
+    if (!hasConsent) {
+      navigate('/consent', { replace: true });
+    }
+  }, [hasConsent, navigate]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -408,10 +442,15 @@ export default function ReportPage() {
     }, 50);
   };
 
+  if (!hasConsent) {
+    return null;
+  }
+
   return (
     <PageTransition>
-      <div className="report-page-root" style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
-
+      <div className="report-page-root" style={{ minHeight: '100vh', background: isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        {/* Page-level doodle background that scrolls naturally with report */}
+        <ComicBgPattern variant="doodle" opacity={0.26} />
         {/* Minimalist Top Nav */}
         <nav
           className="report-nav"
@@ -427,7 +466,22 @@ export default function ReportPage() {
             zIndex: 40,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: 0,
+              textAlign: 'left',
+            }}
+            title="Return to Home"
+          >
+            <ShinchanLogo size={32} />
             <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--ink)', fontSize: '1rem' }}>
               GAZE<span style={{ color: 'var(--orange-500)' }}>SCREEN</span>
             </span>
@@ -435,9 +489,10 @@ export default function ReportPage() {
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--ink-muted)', fontWeight: 700 }}>
               CLINICAL SUMMARY
             </span>
-          </div>
+          </button>
 
-          <div className="no-print" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="no-print" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <ThemeToggle />
             <button
               onClick={() => navigate('/research')}
               className="brutal-btn brutal-btn-yellow"
@@ -456,54 +511,111 @@ export default function ReportPage() {
           </div>
         </nav>
 
-        <main style={{ flex: 1, padding: '2.5rem 1.5rem 4rem' }}>
-          <div style={{ maxWidth: 1040, margin: '0 auto' }}>
+        <main style={{ flex: 1, padding: '2.5rem 1.5rem 4rem', position: 'relative' }}>
+
+          {/* Shinchan & Shiro delivering clinical report envelope on left margin */}
+          <div
+            className="no-print shinchan-hide-below-xl"
+            style={{
+              position: 'absolute',
+              left: 'max(0.5rem, calc((100vw - 1040px) / 2 - 215px))',
+              top: '5rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+              opacity: 0.95,
+            }}
+          >
+            <ShinchanLetterMascot
+              size={200}
+              alt="Shinchan & Shiro delivering report letter"
+              style={{
+                width: 'clamp(140px, 15vw, 205px)',
+                transform: 'scaleX(-1)',
+                filter: 'drop-shadow(-5px 7px 0px rgba(18,24,38,0.26))',
+              }}
+            />
+          </div>
+
+          {/* Robot Dad Hiroshi & Family cheering report on right margin beside Steady Visual Attention Profile banner */}
+          <div
+            className="no-print shinchan-hide-below-xl"
+            style={{
+              position: 'absolute',
+              right: 'max(0.75rem, calc((100vw - 1040px) / 2 - 205px))',
+              top: '13.5rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+              opacity: 0.96,
+            }}
+          >
+            <RobotDadFamilyMascot
+              size={210}
+              alt="Robot Dad Hiroshi with Shinchan, Misae, Himawari and Shiro"
+              style={{
+                width: 'clamp(130px, 13vw, 195px)',
+                filter: 'drop-shadow(5px 7px 0px rgba(18,24,38,0.26))',
+              }}
+            />
+          </div>
+
+          <div style={{ maxWidth: 1040, margin: '0 auto', position: 'relative', zIndex: 10 }}>
             {/* Header */}
-            <motion.div className="patient-header-block" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '1.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-                <span
-                  className="brutal-tag"
-                  style={{
-                    background: '#fef3c7',
-                    color: '#78350f',
-                    letterSpacing: '0.04em',
-                    fontWeight: 800,
-                  }}
-                >
-                  PATIENT REPORT
-                </span>
-                <span
-                  className="brutal-tag"
-                  style={{
-                    background: '#ffffff',
-                    color: 'var(--ink)',
-                    fontFamily: 'var(--font-mono)',
-                    fontWeight: 800,
-                    fontSize: '0.74rem',
-                  }}
-                >
-                  SUBJECT: {session.childName || 'ANONYMOUS'} (AGE: {age})
-                </span>
-                <span className={`brutal-tag ${cohort.badgeClass}`}>
-                  ● {cohort.title}
-                </span>
+            <motion.div className="patient-header-block" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <span
+                    className="brutal-tag"
+                    style={{
+                      background: '#fef3c7',
+                      color: '#78350f',
+                      letterSpacing: '0.04em',
+                      fontWeight: 800,
+                    }}
+                  >
+                    PATIENT REPORT
+                  </span>
+                  <span
+                    className="brutal-tag"
+                    style={{
+                      background: '#ffffff',
+                      color: 'var(--ink)',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 800,
+                      fontSize: '0.74rem',
+                    }}
+                  >
+                    SUBJECT: {session.childName || 'ANONYMOUS'} (AGE: {age})
+                  </span>
+                </div>
+
+                {/* Celebratory stamp with compact Action Kamen hero mascot */}
+                <div className="no-print shinchan-hide-mobile" style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+                  <ComicStamp text="SCREENING COMPLETE!" subtext="Action Kamen Focus Verified" rotate={-1.5} color="#15803d" bgColor="#f0fdf4" />
+                  <ActionKamenMascot size={46} alt="Action Kamen Superhero" style={{ maxHeight: 48, width: 'auto', filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.24))' }} />
+                </div>
               </div>
               <h1 className="text-hero" style={{ marginTop: 2, marginBottom: 2 }}>
                 Digital Biomarker Screening Summary
               </h1>
             </motion.div>
 
-            {/* Primary ADHD Assessment Banner */}
+            {/* Primary ADHD Assessment Banner with Driving Pixel Car animation */}
             <SpotlightCard
               className="primary-banner-card"
               style={{
+                position: 'relative',
                 padding: '2rem',
                 marginBottom: '1.5rem',
                 background: cfg.bgColor,
                 border: '3px solid var(--ink)',
                 boxShadow: '6px 6px 0px var(--ink)',
+                overflow: 'visible',
               }}
             >
+              {/* Driving Pixel Car running along primary assessment banner border */}
+              <div className="no-print shinchan-hide-mobile">
+                <DrivingPixelCar size={42} duration={16} />
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
                 <div style={{ flex: 1, minWidth: 280 }}>
                   <span className={`brutal-tag ${cfg.badgeClass}`} style={{ marginBottom: 8 }}>
@@ -717,7 +829,7 @@ export default function ReportPage() {
               </SpotlightCard>
 
               {/* Radar Behavioral Signature */}
-              <SpotlightCard className="radar-card" style={{ padding: '1.75rem', background: '#faf5ff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
+              <SpotlightCard className="radar-card" style={{ position: 'relative', padding: '1.75rem', background: '#faf5ff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)', display: 'flex', flexDirection: 'column' }}>
                 <div
                   style={{
                     fontFamily: 'var(--font-mono)',
@@ -748,50 +860,83 @@ export default function ReportPage() {
                     TYPICAL FOR AGE
                   </div>
                 </div>
+
+                {/* Shinchan Artist Crayon Drawing Note in the empty space below radar matrix */}
+                <div
+                  className="no-print"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 14,
+                    marginTop: 'auto',
+                    paddingTop: '1.25rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 14,
+                      width: '100%',
+                      padding: '12px 14px',
+                      background: '#ffffff',
+                      border: '2px solid var(--ink)',
+                      borderRadius: '4px',
+                      boxShadow: '3px 3px 0px var(--ink)',
+                    }}
+                  >
+                    <CrayonCreatorMascot
+                      size={86}
+                      alt="Shinchan sketching radar profile"
+                      style={{ flexShrink: 0, filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.22))' }}
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: '0.76rem', color: 'var(--purple-700)', letterSpacing: '0.04em' }}>
+                        SHINCHAN'S ARTIST PROFILE NOTE
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--ink)', lineHeight: 1.4 }}>
+                        Multi-axis pediatric gaze stability mapped against age-matched clinical norms.
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </SpotlightCard>
             </div>
 
-
-            {/* Heatmap Toggle Section */}
-            <SpotlightCard
-              className={showHeatmap ? 'heatmap-section heatmap-active' : 'heatmap-section heatmap-empty'}
-              style={{ padding: '1.75rem', background: '#fff7ed', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)', marginBottom: '2rem' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showHeatmap ? '1rem' : 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 10, height: 10, background: 'var(--orange-500)', display: 'inline-block' }} />
-                  <div className="text-label" style={{ color: 'var(--ink)', fontWeight: 800 }}>
-                    Spatial Gaze Dispersion Heatmap
-                  </div>
-                </div>
-                <MotionButton
-                  className="no-print"
-                  variant="outline"
-                  onClick={() => setShowHeatmap((v) => !v)}
-                  style={{ fontSize: '0.78rem', padding: '8px 16px' }}
-                >
-                  {showHeatmap ? 'Hide Heatmap' : 'Render Heatmap Overlay'}
-                </MotionButton>
-              </div>
-
-              <AnimatePresence>
-                {showHeatmap && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
-                    <GazeHeatmap gazePoints={session.gazePoints} width={640} height={280} style={{ width: '100%', border: '2px solid var(--ink)', borderRadius: '3px' }} />
-                    <div style={{ marginTop: 8, fontSize: '0.78rem', color: 'var(--ink-secondary)', fontFamily: 'var(--font-mono)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Flame size={14} style={{ color: 'var(--orange-500)' }} />
-                      <span>Hotspots show where your gaze clustered during the assessment.</span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </SpotlightCard>
 
             {/* Clean Consolidated Clinical Next Steps */}
             <SpotlightCard
               className="next-steps-card"
               style={{ padding: '1.5rem', background: '#fffbeb', border: '2.5px solid var(--ink)', boxShadow: '4px 4px 0px var(--ink)', marginBottom: '1.75rem' }}
             >
+              {/* Shinchan Doctor Tip (Screen-only) */}
+              {isShinchanTheme && (
+                <div
+                  className="no-print shinchan-hide-mobile"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    marginBottom: 14,
+                    padding: '10px 14px',
+                    background: '#ffffff',
+                    border: '2px solid var(--ink)',
+                    borderRadius: '4px',
+                    boxShadow: '2.5px 2.5px 0px var(--ink)',
+                  }}
+                >
+                  <OperationsLeadMascot size={46} alt="Dr. Shinchan" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.74rem', color: 'var(--ink)', fontWeight: 800 }}>
+                      Dr. Shinchan & Clinical Team Tip:
+                    </div>
+                    <div style={{ fontSize: '0.74rem', color: 'var(--ink-secondary)', lineHeight: 1.35 }}>
+                      Show this quantitative telemetry to your pediatrician! It gives them clear baseline numbers, not guesswork!
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ width: 10, height: 10, background: 'var(--orange-500)', display: 'inline-block' }} />
@@ -840,8 +985,96 @@ export default function ReportPage() {
               </div>
             </SpotlightCard>
 
+            {/* Print-only clinical footnote for Page 1 */}
+            <div className="print-only report-print-footer" style={{ display: 'none', marginTop: '8px', paddingTop: '6px', borderTop: '1px solid #cbd5e1', fontSize: '0.68rem', color: '#64748b', fontFamily: 'var(--font-mono)', lineHeight: 1.38 }}>
+              <strong>Clinical Telemetry Disclaimer:</strong> GazeScreen is a digital screening biomarker engine utilizing computer vision eye-tracking norms. It is designed to assist, not replace, formal clinical evaluation by a licensed healthcare provider. Results should be reviewed alongside validated diagnostic instruments (ASRS v1.1, DIVA-5, or Vanderbilt scales).
+              {showHeatmap && <span style={{ float: 'right', fontWeight: 800 }}>[ CONTINUED ON PAGE 2: SPATIAL OCULOMOTOR HEATMAP → ]</span>}
+            </div>
+
+            {/* Heatmap Toggle Section */}
+            <SpotlightCard
+              className={showHeatmap ? 'heatmap-section heatmap-active' : 'heatmap-section heatmap-empty'}
+              style={{ padding: '1.75rem', background: '#fff7ed', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)', marginBottom: '2rem' }}
+            >
+              {/* Print-only Page 2 Header */}
+              <div className="print-only heatmap-print-header" style={{ display: 'none', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2.5px solid #121826', paddingBottom: '6px', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: '0.86rem', color: '#121826', letterSpacing: '0.04em' }}>
+                      GAZESCREEN · SPATIAL OCULOMOTOR TELEMETRY
+                    </div>
+                    <span style={{ fontSize: '0.68rem', background: '#fee2e2', border: '1.5px solid #121826', padding: '1px 6px', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>
+                      PAGE 2 / 2
+                    </span>
+                  </div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: '#64748b' }}>
+                    SUBJECT: {session.childName ? session.childName.toUpperCase() : 'ANONYMOUS'} (AGE {age}) · ID: {session.sessionId ? session.sessionId.slice(-8) : 'GZ-LOCAL'}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showHeatmap ? '1rem' : 0, flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ width: 10, height: 10, background: 'var(--orange-500)', display: 'inline-block' }} />
+                  <div className="text-label" style={{ color: 'var(--ink)', fontWeight: 800 }}>
+                    Spatial Gaze Dispersion Heatmap
+                  </div>
+                  <span className="brutal-tag tag-blue" style={{ fontSize: '0.66rem', padding: '1px 7px' }}>
+                    {(session.gazePoints?.length ?? 0).toLocaleString()} OPTICAL SAMPLES
+                  </span>
+                </div>
+                <MotionButton
+                  className="no-print"
+                  variant="outline"
+                  onClick={() => setShowHeatmap((v) => !v)}
+                  style={{ fontSize: '0.78rem', padding: '8px 16px' }}
+                >
+                  {showHeatmap ? 'Hide Heatmap' : 'Render Heatmap Overlay'}
+                </MotionButton>
+              </div>
+
+              <AnimatePresence>
+                {showHeatmap && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                    <GazeHeatmap gazePoints={session.gazePoints} width={640} height={280} style={{ width: '100%', border: '2px solid var(--ink)', borderRadius: '3px' }} />
+                    <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.76rem', color: 'var(--ink-secondary)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+                        <Flame size={14} style={{ color: 'var(--orange-500)', flexShrink: 0 }} />
+                        <span>Warm Bright Spots: Looked here the longest (Main Focus)</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.76rem', color: 'var(--ink-secondary)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block', flexShrink: 0 }} />
+                        <span>Green Glow: Brief glances while looking around the screen</span>
+                      </div>
+                    </div>
+                    {/* Print-only Page 2 footnote */}
+                    <div className="print-only" style={{ display: 'none', marginTop: '14px', paddingTop: '8px', borderTop: '1px solid #cbd5e1', fontSize: '0.68rem', color: '#64748b', fontFamily: 'var(--font-mono)', lineHeight: 1.4 }}>
+                      <strong>How to read this map:</strong> Bright warm spots show where the participant focused their attention the most. Green halos show areas they glanced at briefly during the 60-second assessment.
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </SpotlightCard>
+
             {/* Bottom Actions */}
-            <div className="no-print" style={{ display: 'flex', gap: 14, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <div
+              className="no-print"
+              style={{
+                display: 'flex',
+                gap: 16,
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                marginTop: isShinchanTheme ? '2.5rem' : '1.5rem',
+              }}
+            >
+              {/* Buriburizaemon on Retake side */}
+              {isShinchanTheme && (
+                <div className="no-print shinchan-hide-mobile" style={{ marginRight: 2, display: 'inline-flex', alignItems: 'center' }}>
+                  <RolePigMascot size={48} alt="Buriburizaemon Retake Mascot" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.2))' }} />
+                </div>
+              )}
+
               <MotionButton
                 variant="yellow"
                 onClick={handleRetake}
@@ -854,24 +1087,64 @@ export default function ReportPage() {
               >
                 Retake Screening
               </MotionButton>
-              <MotionButton
-                variant="coral"
-                onClick={handlePrint}
-                icon={
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
-                    <polyline points="6 9 6 2 18 2 18 9" />
-                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                    <rect x="6" y="14" width="12" height="8" />
-                  </svg>
-                }
-              >
-                Print Clinical Summary
-              </MotionButton>
-            </div>
 
-            {/* Print-only clinical footnote */}
-            <div className="print-only" style={{ display: 'none', marginTop: '1.75rem', paddingTop: '12px', borderTop: '1px solid #cbd5e1', fontSize: '0.7rem', color: '#64748b', fontFamily: 'var(--font-mono)', lineHeight: 1.45 }}>
-              <strong>Clinical Telemetry Disclaimer:</strong> GazeScreen is a digital screening biomarker engine utilizing computer vision eye-tracking norms. It is designed to assist, not replace, formal clinical evaluation by a licensed healthcare provider. Results should be reviewed alongside validated diagnostic instruments (ASRS v1.1, DIVA-5, or Vanderbilt scales).
+              {/* Primary Print Action with Centered Comic Arrow pointing directly at Print button */}
+              <div style={{ position: 'relative' }}>
+                {isShinchanTheme && (
+                  <div
+                    className="shinchan-hide-mobile"
+                    style={{
+                      position: 'absolute',
+                      top: -32,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      pointerEvents: 'none',
+                      whiteSpace: 'nowrap',
+                      zIndex: 2,
+                    }}
+                  >
+                    <HandDrawnArrow direction="right-down" color="var(--orange-500)" width={30} height={20} />
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        color: 'var(--orange-600)',
+                        background: '#FFF7ED',
+                        padding: '2px 6px',
+                        border: '1px solid var(--orange-300)',
+                        borderRadius: '3px',
+                        boxShadow: '1.5px 1.5px 0px var(--ink)',
+                      }}
+                    >
+                      Save or Print!
+                    </span>
+                  </div>
+                )}
+                <MotionButton
+                  variant="coral"
+                  onClick={handlePrint}
+                  icon={
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
+                      <polyline points="6 9 6 2 18 2 18 9" />
+                      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                      <rect x="6" y="14" width="12" height="8" />
+                    </svg>
+                  }
+                >
+                  Print Clinical Summary
+                </MotionButton>
+              </div>
+
+              {/* Shinchan and Shiro Relaxing Mascot on Print side */}
+              {isShinchanTheme && (
+                <div className="no-print shinchan-hide-mobile" style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center' }}>
+                  <ShinchanShiroRelaxMascot size={88} alt="Shinchan and Shiro" style={{ filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.22))' }} />
+                </div>
+              )}
             </div>
           </div>
         </main>

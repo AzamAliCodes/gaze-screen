@@ -1,9 +1,36 @@
+import { useTheme } from '../context/ThemeContext';
+import { useSession } from '../context/SessionContext';
+import ThemeToggle from '../components/ThemeToggle';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import PageTransition from '../components/PageTransition';
 import MotionButton from '../components/MotionButton';
 import ShinyText from '../components/ShinyText';
 import SpotlightCard from '../components/SpotlightCard';
+import {
+  ShinchanLogo,
+  FlyingMascot,
+  RolePigMascot,
+  MisaeMotherMascot,
+  KantamRoboMascot,
+  ActionKamenMascot,
+  ActionPunchMascot,
+  BumblebeeMascot,
+  PartyShinchanMascot,
+  LaptopCoderMascot,
+  ShiroShinchanMascot,
+  ShinchanLetterMascot,
+  ShinchanHeadBalanceMascot,
+  ShinchanBackpackMascot,
+  DrivingPixelCar,
+  ComicBgPattern,
+} from '../components/shinchan/ShinchanMascots';
+import ShinchanSticker from '../components/shinchan/ShinchanSticker';
+import {
+  HandDrawnArrow,
+  SketchUnderline,
+} from '../components/shinchan/DoodleDecorations';
+import ShinchanFooter from '../components/shinchan/ShinchanFooter';
 
 /* ── Interactive Clinical Eye Icon with Synchronized Shiny Flare & Floating Motion ── */
 function EyeLogo() {
@@ -112,20 +139,28 @@ function EyeLogo() {
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { isShinchanTheme } = useTheme();
+  const { session, resetSession } = useSession();
+
+  const handleStartScreening = () => {
+    if (session?.completed) {
+      resetSession();
+    }
+    navigate('/consent');
+  };
 
   return (
     <PageTransition>
       <div
         style={{
           minHeight: '100vh',
-          background: '#ffffff',
+          background: isShinchanTheme ? '#FFFEEF' : '#ffffff',
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-
         {/* Minimalist Top Nav */}
         <nav
           style={{
@@ -140,25 +175,22 @@ export default function LandingPage() {
             zIndex: 40,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                border: '2px solid var(--ink)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'var(--yellow-400)',
-                boxShadow: '2.5px 2.5px 0px var(--ink)',
-                borderRadius: '3px',
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" fill="var(--ink)" />
-              </svg>
-            </div>
+          {/* Shinchan Logo brand badge in nav */}
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: 0,
+            }}
+            title="GazeScreen Home"
+          >
+            <ShinchanLogo size={36} />
             <span
               style={{
                 fontFamily: 'var(--font-mono)',
@@ -170,10 +202,15 @@ export default function LandingPage() {
             >
               GAZE<span style={{ color: 'var(--orange-500)' }}>SCREEN</span>
             </span>
+          </button>
+
+          {/* Shinchan Theme Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <ThemeToggle />
           </div>
         </nav>
 
-        {/* Hero Section */}
+        {/* Hero Section with Authentic Shinchan Layer */}
         <main
           style={{
             flex: 1,
@@ -182,10 +219,62 @@ export default function LandingPage() {
             justifyContent: 'center',
             padding: '3.5rem 1.5rem 2.5rem',
             position: 'relative',
+            overflow: 'hidden',
             zIndex: 5,
+            background: isShinchanTheme ? 'transparent' : '#ffffff',
           }}
         >
-          <div style={{ maxWidth: 840, width: '100%', textAlign: 'center' }}>
+          {/* Section-specific doodle background that scrolls naturally with Hero */}
+          <ComicBgPattern variant="doodle" opacity={0.30} />
+          {/* Flying Hero Mascot — scaled boldly and lifted towards middle for balanced hero flight composition */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(10px, 3.5vw, 60px)',
+              bottom: 'clamp(115px, 16vh, 195px)',
+              zIndex: 8,
+              pointerEvents: 'none',
+            }}
+          >
+            <ShinchanSticker delay={0.4} interactive={false}>
+              <FlyingMascot size={320} style={{ width: 'clamp(240px, 24vw, 350px)', filter: 'drop-shadow(5px 7px 0px rgba(18,24,38,0.28))' }} />
+            </ShinchanSticker>
+          </div>
+
+          {/* Bumblebee Mascot — floating near top-left of hero */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(25px, 4.5vw, 90px)',
+              top: 'clamp(30px, 5vh, 85px)',
+              zIndex: 8,
+              pointerEvents: 'none',
+            }}
+          >
+            <ShinchanSticker delay={0.3} interactive={false}>
+              <BumblebeeMascot size={135} style={{ width: 'clamp(95px, 10vw, 145px)', filter: 'drop-shadow(4px 5px 0px rgba(18,24,38,0.26))' }} />
+            </ShinchanSticker>
+          </div>
+
+          {/* Party Shinchan Mascot (Peace sign & bowtie) — scaled up bold and prominent in bottom-left flank */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(35px, 6.5vw, 130px)',
+              bottom: 'clamp(10px, 2.5vh, 35px)',
+              zIndex: 8,
+              pointerEvents: 'none',
+            }}
+          >
+            <ShinchanSticker delay={0.6} interactive={false}>
+              <PartyShinchanMascot size={230} style={{ width: 'clamp(165px, 17vw, 245px)', filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.26))' }} />
+            </ShinchanSticker>
+          </div>
+
+          <div style={{ maxWidth: 960, width: '100%', textAlign: 'center', position: 'relative', zIndex: 10 }}>
             <EyeLogo />
 
             <motion.div
@@ -239,81 +328,190 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.45 }}
-              style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: '3.5rem' }}
+              style={{
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 14,
+                marginBottom: '3.5rem',
+              }}
             >
-              <MotionButton
-                variant="coral"
-                onClick={() => navigate('/consent')}
-                style={{ fontSize: '0.95rem', padding: '14px 34px' }}
-                icon={
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 8 }}>
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                }
+              {/* Row 1: Primary Action & How It Works */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 14,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                }}
               >
-                Start Screening Now
-              </MotionButton>
-              <MotionButton
-                variant="blue"
-                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                style={{ fontSize: '0.95rem', padding: '14px 26px' }}
-                icon={
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }}>
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                  </svg>
-                }
-              >
-                How It Works
-              </MotionButton>
-              <MotionButton
-                variant="yellow"
-                onClick={() => navigate('/research')}
-                style={{ fontSize: '0.95rem', padding: '14px 28px' }}
-                icon={
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 8 }}>
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                  </svg>
-                }
-              >
-                Explore Research Model
-              </MotionButton>
+                {/* Primary Action Button with Centered Comic Arrow */}
+                <div style={{ position: 'relative' }}>
+                  {isShinchanTheme && (
+                    <div
+                      className="shinchan-hide-mobile"
+                      style={{
+                        position: 'absolute',
+                        top: -34,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        pointerEvents: 'none',
+                        whiteSpace: 'nowrap',
+                        zIndex: 2,
+                      }}
+                    >
+                      <HandDrawnArrow direction="right-down" color="var(--orange-500)" width={32} height={22} />
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.72rem',
+                          fontWeight: 800,
+                          color: 'var(--orange-600)',
+                          background: '#FFF7ED',
+                          padding: '2px 6px',
+                          border: '1px solid var(--orange-300)',
+                          borderRadius: '3px',
+                          boxShadow: '1.5px 1.5px 0px var(--ink)',
+                        }}
+                      >
+                        Boing! Tap here!
+                      </span>
+                    </div>
+                  )}
+
+                  <MotionButton
+                    variant="coral"
+                    onClick={handleStartScreening}
+                    style={{ fontSize: '0.95rem', padding: '14px 34px' }}
+                    icon={
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }}>
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    }
+                  >
+                    Start Screening Now
+                  </MotionButton>
+                </div>
+
+                <MotionButton
+                  variant="blue"
+                  onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                  style={{ fontSize: '0.95rem', padding: '14px 26px' }}
+                  icon={
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }}>
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  }
+                >
+                  How It Works
+                </MotionButton>
+              </div>
+
+              {/* Row 2: Explore Research Model placed cleanly below the 2 buttons */}
+              <div>
+                <MotionButton
+                  variant="yellow"
+                  onClick={() => navigate('/research')}
+                  style={{ fontSize: '0.95rem', padding: '14px 28px' }}
+                  icon={
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 8 }}>
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                    </svg>
+                  }
+                >
+                  Explore Research Model
+                </MotionButton>
+              </div>
             </motion.div>
 
           </div>
         </main>
+
+
 
         {/* Feature Cards Section */}
         <section
           style={{
             padding: '3.5rem 1.5rem',
             borderTop: '2.5px solid var(--ink)',
-            background: '#fafaf9',
+            background: isShinchanTheme ? '#FFFEEF' : '#fafaf9',
             position: 'relative',
             zIndex: 5,
           }}
         >
-          <div style={{ maxWidth: 1040, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-              <span className="brutal-tag tag-dark" style={{ marginBottom: 8 }}>
-                Technical Architecture
-              </span>
-              <h2 className="text-section" style={{ marginTop: 6 }}>
+          {/* Action Punch Mascot in margin — bold scale like recruitment.githubsrmist.in */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(0.5rem, 3vw, 3.5rem)',
+              top: '8rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+              opacity: 0.9,
+            }}
+          >
+            <ActionPunchMascot size={170} alt="Action Punch Shinchan" style={{ width: 'clamp(120px, 13vw, 180px)', filter: 'drop-shadow(4px 5px 0px rgba(18,24,38,0.22))' }} />
+          </div>
+
+          {/* Laptop Coder Shinchan on right margin — authentic recruitment placement */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(0.5rem, 3vw, 3.5rem)',
+              top: '8rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+              opacity: 0.9,
+            }}
+          >
+            <LaptopCoderMascot size={160} alt="Shinchan Coding Laptop" style={{ width: 'clamp(120px, 13vw, 175px)', filter: 'drop-shadow(4px 5px 0px rgba(18,24,38,0.22))' }} />
+          </div>
+
+          <div style={{ maxWidth: 1040, margin: '0 auto', position: 'relative', zIndex: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '2.5rem' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <span className="brutal-tag tag-dark">
+                  Technical Architecture
+                </span>
+              </div>
+              <h2 className="text-section" style={{ marginTop: 4, position: 'relative', display: 'inline-block' }}>
                 Clinically Informed, Privacy-First
+                <SketchUnderline color="var(--yellow-400)" height={8} style={{ marginTop: 6 }} />
               </h2>
             </div>
 
+            {/* 4-Box Architecture Circuit Track with Driving Pixel Car circling the full perimeter */}
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 230px), 1fr))',
-                gap: 20,
+                position: 'relative',
+                overflow: 'visible',
+                border: isShinchanTheme ? '2px dashed rgba(18, 24, 38, 0.28)' : 'none',
+                borderRadius: '8px',
+                padding: isShinchanTheme ? '14px' : '0',
+                background: isShinchanTheme ? 'rgba(255, 255, 255, 0.45)' : 'transparent',
               }}
             >
-              <SpotlightCard style={{ padding: '1.6rem', background: '#ffffff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 230px), 1fr))',
+                  gap: 20,
+                  position: 'relative',
+                  zIndex: 2,
+                }}
+              >
+                <SpotlightCard style={{ position: 'relative', padding: '1.6rem', background: '#ffffff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
                 <div
                   style={{
                     width: 48,
@@ -345,7 +543,7 @@ export default function LandingPage() {
                 </div>
               </SpotlightCard>
 
-              <SpotlightCard style={{ padding: '1.6rem', background: '#ffffff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
+              <SpotlightCard style={{ position: 'relative', padding: '1.6rem', background: '#ffffff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
                 <div
                   style={{
                     width: 48,
@@ -385,7 +583,7 @@ export default function LandingPage() {
                 </div>
               </SpotlightCard>
 
-              <SpotlightCard style={{ padding: '1.6rem', background: '#ffffff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
+              <SpotlightCard style={{ position: 'relative', padding: '1.6rem', background: '#ffffff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
                 <div
                   style={{
                     width: 48,
@@ -417,28 +615,30 @@ export default function LandingPage() {
                 </div>
               </SpotlightCard>
 
-              <SpotlightCard style={{ padding: '1.6rem', background: '#ffffff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
-                <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    border: '2px solid var(--ink)',
-                    borderRadius: '3px',
-                    background: 'var(--yellow-100)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 16,
-                    boxShadow: '3px 3px 0px var(--ink)',
-                    color: 'var(--amber-primary)',
-                  }}
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="20" x2="18" y2="10" />
-                    <line x1="12" y1="20" x2="12" y2="4" />
-                    <line x1="6" y1="20" x2="6" y2="14" />
-                    <line x1="2" y1="20" x2="22" y2="20" />
-                  </svg>
+              {/* 4th card: Clean placement with Crayon mascot in header beside icon, zero text obstruction */}
+              <SpotlightCard style={{ position: 'relative', padding: '1.6rem', background: '#ffffff', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: isShinchanTheme ? 'space-between' : 'flex-start', marginBottom: 16 }}>
+                  <div
+                    style={{
+                      width: 48,
+                      height: 48,
+                      border: '2px solid var(--ink)',
+                      borderRadius: '3px',
+                      background: 'var(--yellow-100)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '3px 3px 0px var(--ink)',
+                      color: 'var(--amber-primary)',
+                    }}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="20" x2="18" y2="10" />
+                      <line x1="12" y1="20" x2="12" y2="4" />
+                      <line x1="6" y1="20" x2="6" y2="14" />
+                      <line x1="2" y1="20" x2="22" y2="20" />
+                    </svg>
+                  </div>
                 </div>
                 <div style={{ display: 'inline-block', marginBottom: 8 }}>
                   <span className="brutal-tag tag-yellow">Clinical Synthesis</span>
@@ -450,6 +650,20 @@ export default function LandingPage() {
                   Categorizes directional risk (Low / Moderate / Elevated) with actionable guidance for pediatrician consultation.
                 </div>
               </SpotlightCard>
+              </div>
+
+              {/* Driving Pixel Car on top with zIndex 35 — 100% visible along the full circuit */}
+              <div
+                className="shinchan-hide-mobile"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  pointerEvents: 'none',
+                  zIndex: 35,
+                }}
+              >
+                <DrivingPixelCar size={46} duration={14} />
+              </div>
             </div>
           </div>
         </section>
@@ -460,16 +674,51 @@ export default function LandingPage() {
           style={{
             padding: '3.5rem 1.5rem',
             borderTop: '2.5px solid var(--ink)',
-            background: '#ffffff',
+            background: isShinchanTheme ? 'transparent' : '#ffffff',
             position: 'relative',
             zIndex: 5,
+            overflow: 'hidden',
           }}
         >
-          <div style={{ maxWidth: 740, margin: '0 auto' }}>
+          {/* Section-specific doodle background that scrolls naturally with Section 3 */}
+          <ComicBgPattern variant="doodle" opacity={0.25} />
+          {/* Kantam Robo on left margin — bold scale from recruitment.githubsrmist.in */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(0.5rem, 3vw, 3.5rem)',
+              top: '4rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+              opacity: 0.92,
+            }}
+          >
+            <KantamRoboMascot size={240} alt="Kantam Robo Mascot" style={{ width: 'clamp(160px, 18vw, 240px)', filter: 'drop-shadow(5px 7px 0px rgba(18,24,38,0.28))' }} />
+          </div>
+
+          {/* Action Kamen on right margin — authentic hero pairing */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(0.5rem, 3vw, 3.5rem)',
+              bottom: '4rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+              opacity: 0.92,
+            }}
+          >
+            <ActionKamenMascot size={180} alt="Action Kamen Superhero" style={{ width: 'clamp(130px, 14vw, 195px)', filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.25))' }} />
+          </div>
+
+          <div style={{ maxWidth: isShinchanTheme ? 840 : 740, margin: '0 auto', position: 'relative', zIndex: 10 }}>
             <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-              <span className="brutal-tag tag-orange" style={{ marginBottom: 8 }}>
-                Workflow Pipeline
-              </span>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span className="brutal-tag tag-orange">
+                  Workflow Pipeline
+                </span>
+              </div>
               <h2 className="text-section" style={{ marginTop: 6 }}>
                 4 Simple Steps.
               </h2>
@@ -485,42 +734,65 @@ export default function LandingPage() {
                 <SpotlightCard
                   key={idx}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 16,
-                    padding: '1.25rem 1.5rem',
+                    padding: '1.15rem 1.5rem',
                     background: step.bg,
                     border: '2.5px solid var(--ink)',
                     boxShadow: '4px 4px 0px var(--ink)',
+                    position: 'relative',
                   }}
                 >
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      border: '2px solid var(--ink)',
-                      borderRadius: '3px',
-                      background: step.color,
-                      color: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontFamily: 'var(--font-mono)',
-                      fontWeight: 900,
-                      fontSize: '1rem',
-                      flexShrink: 0,
-                      boxShadow: '2px 2px 0px var(--ink)',
-                    }}
-                  >
-                    {step.num}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 800, color: 'var(--ink)', fontSize: '0.98rem', marginBottom: 2 }}>
-                      {step.title}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%' }}>
+                    <div
+                      style={{
+                        width: 44,
+                        height: 44,
+                        border: '2px solid var(--ink)',
+                        borderRadius: '3px',
+                        background: step.color,
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 900,
+                        fontSize: '1rem',
+                        flexShrink: 0,
+                        boxShadow: '2px 2px 0px var(--ink)',
+                      }}
+                    >
+                      {step.num}
                     </div>
-                    <div style={{ fontSize: '0.86rem', color: 'var(--ink-secondary)' }}>
-                      {step.desc}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                        <span style={{ fontWeight: 800, color: 'var(--ink)', fontSize: '0.98rem' }}>
+                          {step.title}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.86rem', color: 'var(--ink-secondary)', lineHeight: 1.45 }}>
+                        {step.desc}
+                      </div>
                     </div>
+                    {/* Mascots placed on the SIDE of text for compact horizontal row */}
+                    {isShinchanTheme && idx === 0 && (
+                      <div style={{ marginLeft: 12, flexShrink: 0 }}>
+                        <MisaeMotherMascot size={66} alt="Misae Nohara (Shinchan's Mother)" style={{ transform: 'scaleX(-1)', filter: 'drop-shadow(-2px 3px 0px rgba(18,24,38,0.2))' }} />
+                      </div>
+                    )}
+                    {isShinchanTheme && idx === 1 && (
+                      <div style={{ marginLeft: 12, flexShrink: 0 }}>
+                        <ShinchanHeadBalanceMascot size={68} alt="Shinchan balancing Shiro for head alignment" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.18))' }} />
+                      </div>
+                    )}
+                    {isShinchanTheme && idx === 2 && (
+                      <div style={{ marginLeft: 12, flexShrink: 0 }}>
+                        <ActionPunchMascot size={62} alt="Action Kamen Focus" style={{ transform: 'scaleX(-1)', filter: 'drop-shadow(-2px 3px 0px rgba(18,24,38,0.2))' }} />
+                      </div>
+                    )}
+                    {isShinchanTheme && idx === 3 && (
+                      <div style={{ marginLeft: 12, flexShrink: 0 }}>
+                        <ShinchanLetterMascot size={74} alt="Shinchan running with report letter and Shiro" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.2))' }} />
+                      </div>
+                    )}
                   </div>
                 </SpotlightCard>
               ))}
@@ -528,12 +800,138 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Vibrant Comic Red Call-to-Action Banner — inspired by recruitment.githubsrmist.in CTA */}
+        {isShinchanTheme && (
+        <section
+          style={{
+            background: '#FF4B4B',
+            borderTop: '3px solid var(--ink)',
+            borderBottom: '3px solid var(--ink)',
+            padding: '4rem 1.5rem',
+            textAlign: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+            zIndex: 5,
+          }}
+        >
+          {/* Action Punch Shinchan Mascot on left flank of CTA banner */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(1rem, 4vw, 5rem)',
+              bottom: '1rem',
+              pointerEvents: 'none',
+              zIndex: 8,
+              opacity: 0.96,
+            }}
+          >
+            <ActionPunchMascot
+              size={185}
+              alt="Action Punch Shinchan"
+              style={{
+                width: 'clamp(130px, 14vw, 190px)',
+                filter: 'drop-shadow(5px 6px 0px rgba(18,24,38,0.32))',
+              }}
+            />
+          </div>
+
+          {/* Shinchan & Shiro running with letter on right flank — flipped to charge towards the CTA button! */}
+          <div
+            className="shinchan-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(1rem, 4vw, 5rem)',
+              bottom: '1.5rem',
+              pointerEvents: 'none',
+              zIndex: 8,
+              opacity: 0.95,
+            }}
+          >
+            <ShinchanLetterMascot
+              size={150}
+              alt="Shinchan & Shiro running with invitation letter"
+              style={{
+                width: 'clamp(115px, 13vw, 165px)',
+                filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.3))',
+              }}
+            />
+          </div>
+
+          <div style={{ maxWidth: 740, margin: '0 auto', position: 'relative', zIndex: 10 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <div
+                style={{
+                  background: '#FEE883',
+                  border: '2.5px solid var(--ink)',
+                  boxShadow: '2.5px 2.5px 0px var(--ink)',
+                  borderRadius: '9999px',
+                  padding: '5px 16px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.74rem',
+                  fontWeight: 900,
+                  color: '#1E1B24',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                READY TO BEGIN?
+              </div>
+            </div>
+            <h2
+              style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 'clamp(1.85rem, 4.5vw, 2.85rem)',
+                fontWeight: 900,
+                color: '#ffffff',
+                textShadow: '3.5px 3.5px 0px var(--ink)',
+                letterSpacing: '-0.02em',
+                marginBottom: 12,
+                lineHeight: 1.15,
+              }}
+            >
+              Start the 60-Second Eye Screening
+            </h2>
+            <p
+              style={{
+                color: '#ffffff',
+                fontSize: '1rem',
+                lineHeight: 1.65,
+                maxWidth: 580,
+                margin: '0 auto 2.25rem',
+                fontWeight: 600,
+                opacity: 0.96,
+              }}
+            >
+              100% on-device iris telemetry, zero frames recorded, and immediate baseline report for pediatrician consultation.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <MotionButton
+                variant="yellow"
+                onClick={handleStartScreening}
+                style={{ fontSize: '1.05rem', padding: '16px 36px' }}
+                icon={
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 8 }}>
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                }
+              >
+                Start Free Screening Now →
+              </MotionButton>
+            </div>
+          </div>
+        </section>
+        )}
+
+        {/* Shinchan Comic Band Footer */}
+        <ShinchanFooter />
+
         {/* Clinical Disclaimer Footer */}
         <footer
           style={{
             padding: '2.5rem 1.5rem',
             borderTop: '2.5px solid var(--ink)',
-            background: 'var(--yellow-50)',
+            background: isShinchanTheme ? '#FFFEEF' : 'var(--yellow-50)',
             position: 'relative',
             zIndex: 5,
           }}
