@@ -22,6 +22,20 @@ import {
   ComicBgPattern,
 } from '../components/shinchan/ShinchanMascots';
 import ComicStamp from '../components/shinchan/ComicStamp';
+import {
+  MinionLogo,
+  CelebratingBob,
+  ScientistMinion,
+  GuitarStuart,
+  FlyingSuperMinion,
+  CaptainMinion,
+  LaptopMinion,
+  TrioBananaMinions,
+  BobCarMinion,
+  DrivingMinionScooter,
+  HolePeekingMinion,
+  MinionBgPattern,
+} from '../components/minion/MinionMascots';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
 import { HandDrawnArrow } from '../components/shinchan/DoodleDecorations';
@@ -338,7 +352,7 @@ function MetricRow({ label, value, unit, normRange, delay = 0 }) {
 
 export default function ReportPage() {
   const navigate = useNavigate();
-  const { isShinchanTheme } = useTheme();
+  const { theme, isMinionTheme, isShinchanTheme, isClinicalTheme } = useTheme();
   const { session, resetSession } = useSession();
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [showBiomarkerFaq, setShowBiomarkerFaq] = useState(false);
@@ -448,9 +462,10 @@ export default function ReportPage() {
 
   return (
     <PageTransition>
-      <div className="report-page-root" style={{ minHeight: '100vh', background: isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <div className="report-page-root" style={{ minHeight: '100vh', background: isMinionTheme ? '#FEFCE8' : isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
         {/* Page-level doodle background that scrolls naturally with report */}
         <ComicBgPattern variant="doodle" opacity={0.26} />
+        <MinionBgPattern opacity={0.24} />
         {/* Minimalist Top Nav */}
         <nav
           className="report-nav"
@@ -481,9 +496,32 @@ export default function ReportPage() {
             }}
             title="Return to Home"
           >
-            <ShinchanLogo size={32} />
+            {isMinionTheme ? (
+              <MinionLogo size={32} />
+            ) : isShinchanTheme ? (
+              <ShinchanLogo size={32} />
+            ) : (
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  border: '2px solid var(--ink)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'var(--yellow-400)',
+                  boxShadow: '2px 2px 0px var(--ink)',
+                  borderRadius: '3px',
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" strokeWidth="2.5">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" fill="var(--ink)" />
+                </svg>
+              </div>
+            )}
             <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--ink)', fontSize: '1rem' }}>
-              GAZE<span style={{ color: 'var(--orange-500)' }}>SCREEN</span>
+              GAZE<span style={{ color: isMinionTheme ? '#245B9E' : 'var(--orange-500)' }}>SCREEN</span>
             </span>
             <span style={{ color: 'var(--ink-faint)', fontSize: '0.85rem' }}>/</span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--ink-muted)', fontWeight: 700 }}>
@@ -513,6 +551,56 @@ export default function ReportPage() {
 
         <main style={{ flex: 1, padding: '2.5rem 1.5rem 4rem', position: 'relative' }}>
 
+          {/* ── MINION MARGIN MASCOTS ── */}
+          {/* Minion Peeking from hole on left margin */}
+          {isMinionTheme && (
+            <div
+              className="no-print minion-hide-below-xl"
+              style={{
+                position: 'absolute',
+                left: 'max(0.5rem, calc((100vw - 1040px) / 2 - 215px))',
+                top: '5.5rem',
+                pointerEvents: 'none',
+                zIndex: 1,
+                opacity: 0.95,
+              }}
+            >
+              <HolePeekingMinion
+                size={220}
+                alt="Minion peeking out from hole"
+                style={{
+                  width: 'clamp(140px, 15vw, 220px)',
+                  filter: 'drop-shadow(-5px 7px 0px rgba(18,24,38,0.26))',
+                }}
+              />
+            </div>
+          )}
+
+          {/* Minion Trio Banana Celebrating on right margin beside Steady Visual Attention Profile banner */}
+          {isMinionTheme && (
+            <div
+              className="no-print minion-hide-below-xl"
+              style={{
+                position: 'absolute',
+                right: 'max(0.75rem, calc((100vw - 1040px) / 2 - 205px))',
+                top: '12.5rem',
+                pointerEvents: 'none',
+                zIndex: 1,
+                opacity: 0.96,
+              }}
+            >
+              <TrioBananaMinions
+                size={195}
+                alt="Minions Trio celebrating Steady Visual Attention Profile"
+                style={{
+                  width: 'clamp(130px, 13vw, 195px)',
+                  filter: 'drop-shadow(5px 7px 0px rgba(18,24,38,0.26))',
+                }}
+              />
+            </div>
+          )}
+
+          {/* ── SHINCHAN MARGIN MASCOTS ── */}
           {/* Shinchan & Shiro delivering clinical report envelope on left margin */}
           <div
             className="no-print shinchan-hide-below-xl"
@@ -593,6 +681,28 @@ export default function ReportPage() {
                   <ComicStamp text="SCREENING COMPLETE!" subtext="Action Kamen Focus Verified" rotate={-1.5} color="#15803d" bgColor="#f0fdf4" />
                   <ActionKamenMascot size={46} alt="Action Kamen Superhero" style={{ maxHeight: 48, width: 'auto', filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.24))' }} />
                 </div>
+
+                {/* Celebratory stamp with compact Captain Minion hero mascot */}
+                {isMinionTheme && (
+                  <div className="no-print minion-hide-mobile" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                    <span
+                      className="brutal-tag"
+                      style={{
+                        background: '#FEF08A',
+                        border: '2px solid var(--ink)',
+                        color: 'var(--ink)',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 800,
+                        fontSize: '0.74rem',
+                        padding: '4px 10px',
+                        boxShadow: '2px 2px 0px var(--ink)',
+                      }}
+                    >
+                      SCREENING COMPLETE!
+                    </span>
+                    <CaptainMinion size={46} alt="Captain Minion Verified" style={{ maxHeight: 48, width: 'auto', filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.24))' }} />
+                  </div>
+                )}
               </div>
               <h1 className="text-hero" style={{ marginTop: 2, marginBottom: 2 }}>
                 Digital Biomarker Screening Summary
@@ -615,6 +725,10 @@ export default function ReportPage() {
               {/* Driving Pixel Car running along primary assessment banner border */}
               <div className="no-print shinchan-hide-mobile">
                 <DrivingPixelCar size={42} duration={16} />
+              </div>
+              {/* Driving Minion Scooter running along primary assessment banner border */}
+              <div className="no-print minion-hide-mobile">
+                <DrivingMinionScooter size={46} duration={16} />
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
                 <div style={{ flex: 1, minWidth: 280 }}>
@@ -861,45 +975,89 @@ export default function ReportPage() {
                   </div>
                 </div>
 
-                {/* Shinchan Artist Crayon Drawing Note in the empty space below radar matrix */}
-                <div
-                  className="no-print"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 14,
-                    marginTop: 'auto',
-                    paddingTop: '1.25rem',
-                  }}
-                >
+                {/* Shinchan Artist Crayon Drawing Note */}
+                {isShinchanTheme && (
                   <div
+                    className="no-print"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: 14,
-                      width: '100%',
-                      padding: '12px 14px',
-                      background: '#ffffff',
-                      border: '2px solid var(--ink)',
-                      borderRadius: '4px',
-                      boxShadow: '3px 3px 0px var(--ink)',
+                      marginTop: 'auto',
+                      paddingTop: '1.25rem',
                     }}
                   >
-                    <CrayonCreatorMascot
-                      size={86}
-                      alt="Shinchan sketching radar profile"
-                      style={{ flexShrink: 0, filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.22))' }}
-                    />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: '0.76rem', color: 'var(--purple-700)', letterSpacing: '0.04em' }}>
-                        SHINCHAN'S ARTIST PROFILE NOTE
-                      </div>
-                      <div style={{ fontSize: '0.74rem', color: 'var(--ink)', lineHeight: 1.4 }}>
-                        Multi-axis pediatric gaze stability mapped against age-matched clinical norms.
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 14,
+                        width: '100%',
+                        padding: '12px 14px',
+                        background: '#ffffff',
+                        border: '2px solid var(--ink)',
+                        borderRadius: '4px',
+                        boxShadow: '3px 3px 0px var(--ink)',
+                      }}
+                    >
+                      <CrayonCreatorMascot
+                        size={86}
+                        alt="Shinchan sketching radar profile"
+                        style={{ flexShrink: 0, filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.22))' }}
+                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: '0.76rem', color: 'var(--purple-700)', letterSpacing: '0.04em' }}>
+                          SHINCHAN'S ARTIST PROFILE NOTE
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--ink)', lineHeight: 1.4 }}>
+                          Multi-axis pediatric gaze stability mapped against age-matched clinical norms.
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {/* Minion Radar Profile Note */}
+                {isMinionTheme && (
+                  <div
+                    className="no-print"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 14,
+                      marginTop: 'auto',
+                      paddingTop: '1.25rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 14,
+                        width: '100%',
+                        padding: '12px 14px',
+                        background: '#FFFBEB',
+                        border: '2px solid var(--ink)',
+                        borderRadius: '4px',
+                        boxShadow: '3px 3px 0px var(--ink)',
+                      }}
+                    >
+                      <LaptopMinion
+                        size={82}
+                        alt="Minion analyzing radar profile on laptop"
+                        style={{ flexShrink: 0, filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.22))' }}
+                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 900, fontSize: '0.76rem', color: '#1E40AF', letterSpacing: '0.04em' }}>
+                          GAZE STABILITY TELEMETRY NOTE
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--ink)', lineHeight: 1.4 }}>
+                          Multi-axis pediatric gaze stability mapped against age-matched clinical norms.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </SpotlightCard>
             </div>
 
@@ -909,6 +1067,34 @@ export default function ReportPage() {
               className="next-steps-card"
               style={{ padding: '1.5rem', background: '#fffbeb', border: '2.5px solid var(--ink)', boxShadow: '4px 4px 0px var(--ink)', marginBottom: '1.75rem' }}
             >
+              {/* Minion Doctor Tip (Screen-only) */}
+              {isMinionTheme && (
+                <div
+                  className="no-print minion-hide-mobile"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    marginBottom: 14,
+                    padding: '10px 14px',
+                    background: '#FFFBEB',
+                    border: '2px solid var(--ink)',
+                    borderRadius: '4px',
+                    boxShadow: '2.5px 2.5px 0px var(--ink)',
+                  }}
+                >
+                  <ScientistMinion size={64} alt="Prof. Minion" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.22))' }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.74rem', color: 'var(--ink)', fontWeight: 800 }}>
+                      Pediatric Screening Telemetry Tip:
+                    </div>
+                    <div style={{ fontSize: '0.74rem', color: '#1F2937', lineHeight: 1.35, fontWeight: 600 }}>
+                      Show this quantitative telemetry to your pediatrician! It gives them clear baseline numbers, not guesswork!
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Shinchan Doctor Tip (Screen-only) */}
               {isShinchanTheme && (
                 <div
@@ -1065,9 +1251,16 @@ export default function ReportPage() {
                 justifyContent: 'flex-end',
                 alignItems: 'center',
                 flexWrap: 'wrap',
-                marginTop: isShinchanTheme ? '2.5rem' : '1.5rem',
+                marginTop: (isShinchanTheme || isMinionTheme) ? '2.5rem' : '1.5rem',
               }}
             >
+              {/* Minion on Retake side */}
+              {isMinionTheme && (
+                <div className="no-print minion-hide-mobile" style={{ marginRight: 2, display: 'inline-flex', alignItems: 'center' }}>
+                  <GuitarStuart size={75} alt="Guitar Stuart" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.2))' }} />
+                </div>
+              )}
+
               {/* Buriburizaemon on Retake side */}
               {isShinchanTheme && (
                 <div className="no-print shinchan-hide-mobile" style={{ marginRight: 2, display: 'inline-flex', alignItems: 'center' }}>
@@ -1090,6 +1283,41 @@ export default function ReportPage() {
 
               {/* Primary Print Action with Centered Comic Arrow pointing directly at Print button */}
               <div style={{ position: 'relative' }}>
+                {isMinionTheme && (
+                  <div
+                    className="minion-hide-mobile"
+                    style={{
+                      position: 'absolute',
+                      top: -34,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      pointerEvents: 'none',
+                      whiteSpace: 'nowrap',
+                      zIndex: 2,
+                    }}
+                  >
+                    <HandDrawnArrow direction="right-down" color="#245B9E" width={30} height={20} />
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '0.74rem',
+                        fontWeight: 900,
+                        color: '#111827',
+                        background: '#FED41E',
+                        padding: '2px 8px',
+                        border: '1.5px solid var(--ink)',
+                        borderRadius: '3px',
+                        boxShadow: '1.5px 1.5px 0px var(--ink)',
+                      }}
+                    >
+                      Save or Print!
+                    </span>
+                  </div>
+                )}
+
                 {isShinchanTheme && (
                   <div
                     className="shinchan-hide-mobile"
@@ -1125,7 +1353,7 @@ export default function ReportPage() {
                   </div>
                 )}
                 <MotionButton
-                  variant="coral"
+                  variant={isMinionTheme ? 'blue' : 'coral'}
                   onClick={handlePrint}
                   icon={
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 6 }}>
@@ -1138,6 +1366,13 @@ export default function ReportPage() {
                   Print Clinical Summary
                 </MotionButton>
               </div>
+
+              {/* Minion Bob in Toy Vehicle Mascot on Print side */}
+              {isMinionTheme && (
+                <div className="no-print minion-hide-mobile" style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center' }}>
+                  <BobCarMinion size={135} alt="Bob Minion in toy vehicle" style={{ filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.24))' }} />
+                </div>
+              )}
 
               {/* Shinchan and Shiro Relaxing Mascot on Print side */}
               {isShinchanTheme && (

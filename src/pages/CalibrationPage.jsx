@@ -20,11 +20,21 @@ import {
 } from '../components/shinchan/ShinchanMascots';
 import SpeechBubble from '../components/shinchan/SpeechBubble';
 import ComicStamp from '../components/shinchan/ComicStamp';
+import {
+  GazeShiftMinion,
+  HappyDaveMinion,
+  CornerPeekingMinion,
+  CelebratingBob,
+  DrivingMinionScooter,
+  MinionBgPattern,
+} from '../components/minion/MinionMascots';
+import MinionSpeechBubble from '../components/minion/MinionSpeechBubble';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
 
 function NavBar() {
   const navigate = useNavigate();
+  const { isMinionTheme } = useTheme();
   return (
     <nav
       style={{
@@ -60,7 +70,7 @@ function NavBar() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <polyline points="15 18 9 12 15 6" />
         </svg>
-        GAZE<span style={{ color: 'var(--orange-500)' }}>SCREEN</span>
+        GAZE<span style={{ color: isMinionTheme ? '#245B9E' : 'var(--orange-500)' }}>SCREEN</span>
       </button>
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -167,7 +177,7 @@ function CheckItem({ label, status }) {
 
 export default function CalibrationPage() {
   const navigate = useNavigate();
-  const { isShinchanTheme } = useTheme();
+  const { theme, isMinionTheme, isShinchanTheme, isClinicalTheme } = useTheme();
   const { session, updateSession } = useSession();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -425,11 +435,40 @@ export default function CalibrationPage() {
 
   return (
     <PageTransition>
-      <div style={{ minHeight: '100vh', background: isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <div style={{ minHeight: '100vh', background: isMinionTheme ? '#FEFCE8' : isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
         <ComicBgPattern variant="doodle" opacity={0.28} />
+        <MinionBgPattern opacity={0.26} />
         <NavBar />
 
         <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2.5rem 1.5rem', position: 'relative' }}>
+          {/* ── MINION MARGIN MASCOTS (Interchanged positions) ── */}
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(0.5rem, 2.5vw, 3.5rem)',
+              top: '13rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          >
+            <HappyDaveMinion size={185} alt="Happy Dave Calibrating Camera" style={{ width: 'clamp(120px, 13vw, 185px)', filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.28))' }} />
+          </div>
+
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(0.5rem, 2.5vw, 3.5rem)',
+              top: '13rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          >
+            <GazeShiftMinion size={175} alt="Minion Gaze Tracking Alignment" style={{ width: 'clamp(120px, 13vw, 175px)', filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.28))' }} />
+          </div>
+
+          {/* ── SHINCHAN MARGIN MASCOTS ── */}
           {/* Action Kamen cheering calibration on right margin */}
           <div
             className="shinchan-hide-mobile"
@@ -468,7 +507,7 @@ export default function CalibrationPage() {
                 <span className="brutal-tag tag-green">Camera Diagnostic</span>
               </div>
               <h1 className="text-section" style={{ marginTop: 4, marginBottom: 6 }}>
-                <ShinyText color="var(--ink)" shineColor="var(--blue-600)">
+                <ShinyText color="var(--ink)" shineColor="var(--blue-600, #2563eb)">
                   Front Camera Calibration
                 </ShinyText>
               </h1>
@@ -484,6 +523,10 @@ export default function CalibrationPage() {
                 {/* Driving Pixel Car along camera workstation border */}
                 <div className="shinchan-hide-mobile">
                   <DrivingPixelCar size={42} duration={14} />
+                </div>
+                {/* Driving Minion Scooter along camera workstation border */}
+                <div className="minion-hide-mobile">
+                  <DrivingMinionScooter size={46} duration={14} />
                 </div>
 
                 <div
@@ -602,6 +645,34 @@ export default function CalibrationPage() {
               {/* Diagnostic Checklist */}
               <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
                 <SpotlightCard style={{ padding: '1.75rem', background: '#fafaf9', border: '2.5px solid var(--ink)', boxShadow: '5px 5px 0px var(--ink)' }}>
+                  {/* Minion Focus Tip Banner */}
+                  {isMinionTheme && (
+                    <div
+                      className="minion-hide-mobile"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 14,
+                        marginBottom: 16,
+                        padding: '10px 14px',
+                        background: '#FFFBEB',
+                        border: '2px solid var(--ink)',
+                        borderRadius: '4px',
+                        boxShadow: '2.5px 2.5px 0px var(--ink)',
+                      }}
+                    >
+                      <CornerPeekingMinion size={60} alt="Minion Gaze Calibration" style={{ filter: 'drop-shadow(2px 3px 0px rgba(18,24,38,0.25))' }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.74rem', color: 'var(--ink)', fontWeight: 800 }}>
+                          Eye Alignment Calibration Rule:
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#1F2937', fontWeight: 600 }}>
+                          Look directly at the screen reticle so optical sensors lock onto corneal reflections.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Shiro & Shinchan Focus Tip Banner */}
                   {isShinchanTheme && (
                     <div
@@ -794,6 +865,15 @@ export default function CalibrationPage() {
                       )}
                     </MotionButton>
                   </div>
+                  {allReady && isMinionTheme && (
+                    <div
+                      className="minion-hide-mobile"
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, pointerEvents: 'none' }}
+                    >
+                      <MinionSpeechBubble text="All green! Ready!" variant="yellow" />
+                      <CelebratingBob size={88} alt="Celebrating Bob Ready" style={{ filter: 'drop-shadow(3px 4px 0px rgba(18,24,38,0.22))' }} />
+                    </div>
+                  )}
                   {allReady && isShinchanTheme && (
                     <div
                       className="shinchan-hide-mobile"

@@ -57,6 +57,7 @@
   --blue-500:     #3b82f6;
   --blue-600:     #2563eb;
   --blue-700:     #1d4ed8;
+  --shine-accent: #2563eb;
 
   /* Cyber Violet & Purple (AI Pipeline, Neural Processing) */
   --purple-50:    #faf5ff;
@@ -419,6 +420,17 @@ body {
 }
 
 /* Shiny Text Animation (React Bits) */
+.shiny-text-wrapper {
+  display: inline-block;
+  position: relative;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  background-size: 220% 100%;
+  animation: shiny-sweep 3s ease-in-out infinite;
+}
+
 @keyframes shiny-sweep {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
@@ -915,19 +927,139 @@ body {
   position: relative;
 }
 
+/* ==========================================================================
+   MINION THEME LAYER UTILITIES & ACCENTS (BANANA & OVERALLS LAB PALETTE)
+   ========================================================================== */
+:root {
+  --minion-yellow:        #FED41E;
+  --minion-yellow-light:  #FFF8D6;
+  --minion-yellow-dark:   #E5BE10;
+  --minion-blue:          #245B9E;
+  --minion-blue-light:    #3D78C4;
+  --minion-blue-dark:     #1A4376;
+  --minion-goggle-silver: #A0AAB8;
+  --minion-goggle-dark:   #475569;
+  --minion-banana-cream:  #FEFCE8;
+  --minion-purple-evil:   #7C3AED;
+}
+
+.minion-badge-yellow {
+  background-color: #FED41E;
+  color: #111827;
+  border: 2.5px solid #111827;
+  box-shadow: 3px 3px 0px #111827;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  padding: 4px 14px;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.minion-badge-blue {
+  background-color: #245B9E;
+  color: #ffffff;
+  border: 2.5px solid #111827;
+  box-shadow: 3px 3px 0px #111827;
+  border-radius: 9999px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  padding: 4px 14px;
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.minion-badge-banana {
+  background-color: #FFFBEB;
+  color: #854D0E;
+  border: 2px solid #854D0E;
+  box-shadow: 2.5px 2.5px 0px #854D0E;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.minion-layer {
+  position: relative;
+}
+
 @media (max-width: 768px) {
+  .minion-hide-mobile,
   .shinchan-hide-mobile {
     display: none !important;
   }
 }
 
 @media (max-width: 1380px) {
+  .minion-hide-below-xl,
   .shinchan-hide-below-xl {
     display: none !important;
   }
 }
 
+/* ============================================================
+   THEME TOGGLE RESPONSIVE & MOBILE STYLES
+   ============================================================ */
+.theme-toggle-dropdown-wrapper {
+  flex-shrink: 0;
+}
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 9999px;
+  box-shadow: 2.5px 2.5px 0px var(--ink);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  user-select: none;
+  outline: none;
+  touch-action: manipulation;
+  white-space: nowrap;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.1s ease;
+}
+
+.theme-toggle-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1.5px 1.5px 0px var(--ink);
+}
+
+@media (max-width: 520px) {
+  .theme-toggle-prefix {
+    display: none !important;
+  }
+  .theme-toggle-btn {
+    padding: 5px 9px !important;
+    font-size: 0.70rem !important;
+    gap: 5px !important;
+    box-shadow: 2px 2px 0px var(--ink) !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .minion-sticker,
+  .minion-speech-bubble,
+  .minion-stamp,
   .shinchan-sticker,
   .comic-speech-bubble,
   .comic-stamp {
@@ -943,7 +1075,8 @@ body {
 }
 
 /* Doodle pattern styling helper */
-.comic-bg-pattern {
+.comic-bg-pattern,
+.minion-bg-pattern {
   pointer-events: none;
 }
 
@@ -958,32 +1091,79 @@ input[type=number] {
   appearance: textfield;
 }
 
-/* Shinchan Theme Toggle overrides (Clinical state when OFF) */
-html.shinchan-theme-on,
-html.shinchan-theme-on body {
-  background-color: #FFFEEF !important;
-}
+/* ==========================================================================
+   MULTI-THEME VISIBILITY & BACKGROUND OVERRIDES (ON-DEMAND ASSET GUARANTEE)
+   ========================================================================== */
 
-html.shinchan-theme-off,
-html.shinchan-theme-off body {
-  background-color: #ffffff !important;
+/* 1. Minion Theme Active */
+html[data-theme="minion"],
+html[data-theme="minion"] body,
+html.theme-minion,
+html.theme-minion body {
+  background-color: #FEFCE8 !important;
+  --shine-accent: #2563eb;
 }
-
-html.shinchan-theme-off .shinchan-layer,
-html.shinchan-theme-off .shinchan-sticker,
-html.shinchan-theme-off .comic-speech-bubble,
-html.shinchan-theme-off .comic-stamp,
-html.shinchan-theme-off .comic-bg-pattern,
-html.shinchan-theme-off .pixel-car-container,
-html.shinchan-theme-off .shinchan-only {
+html[data-theme="minion"] .shinchan-layer,
+html[data-theme="minion"] .shinchan-sticker,
+html[data-theme="minion"] .comic-speech-bubble,
+html[data-theme="minion"] .comic-stamp,
+html[data-theme="minion"] .comic-bg-pattern,
+html[data-theme="minion"] .pixel-car-container,
+html[data-theme="minion"] .shinchan-only,
+html[data-theme="minion"] .clinical-only {
   display: none !important;
 }
-
-html.shinchan-theme-off .clinical-only {
+html[data-theme="minion"] .minion-only {
   display: block !important;
 }
 
-html.shinchan-theme-on .clinical-only {
+/* 2. Shinchan Theme Active */
+html[data-theme="shinchan"],
+html[data-theme="shinchan"] body,
+html.shinchan-theme-on,
+html.shinchan-theme-on body {
+  background-color: #FFFEEF !important;
+  --shine-accent: #2563eb;
+}
+html[data-theme="shinchan"] .minion-layer,
+html[data-theme="shinchan"] .minion-sticker,
+html[data-theme="shinchan"] .minion-speech-bubble,
+html[data-theme="shinchan"] .minion-stamp,
+html[data-theme="shinchan"] .minion-bg-pattern,
+html[data-theme="shinchan"] .minion-scooter-container,
+html[data-theme="shinchan"] .minion-only,
+html[data-theme="shinchan"] .clinical-only {
   display: none !important;
+}
+html[data-theme="shinchan"] .shinchan-only {
+  display: block !important;
+}
+
+/* 3. Clinical Theme Active */
+html[data-theme="clinical"],
+html[data-theme="clinical"] body,
+html.theme-clinical,
+html.theme-clinical body {
+  background-color: #ffffff !important;
+  --shine-accent: #2563eb;
+}
+html[data-theme="clinical"] .minion-layer,
+html[data-theme="clinical"] .minion-sticker,
+html[data-theme="clinical"] .minion-speech-bubble,
+html[data-theme="clinical"] .minion-stamp,
+html[data-theme="clinical"] .minion-bg-pattern,
+html[data-theme="clinical"] .minion-scooter-container,
+html[data-theme="clinical"] .minion-only,
+html[data-theme="clinical"] .shinchan-layer,
+html[data-theme="clinical"] .shinchan-sticker,
+html[data-theme="clinical"] .comic-speech-bubble,
+html[data-theme="clinical"] .comic-stamp,
+html[data-theme="clinical"] .comic-bg-pattern,
+html[data-theme="clinical"] .pixel-car-container,
+html[data-theme="clinical"] .shinchan-only {
+  display: none !important;
+}
+html[data-theme="clinical"] .clinical-only {
+  display: block !important;
 }
 

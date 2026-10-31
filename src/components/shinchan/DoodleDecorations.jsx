@@ -15,8 +15,8 @@ export function HandDrawnArrow({
   style = {},
   className = '',
 }) {
-  const { isShinchanTheme } = useTheme();
-  if (!isShinchanTheme) return null;
+  const { isShinchanTheme, isMinionTheme } = useTheme();
+  if (!isShinchanTheme && !isMinionTheme) return null;
 
   return (
     <svg
@@ -98,8 +98,8 @@ export function SketchUnderline({
   style = {},
   className = '',
 }) {
-  const { isShinchanTheme } = useTheme();
-  if (!isShinchanTheme) return null;
+  const { isShinchanTheme, isMinionTheme } = useTheme();
+  if (!isShinchanTheme && !isMinionTheme) return null;
 
   return (
     <svg

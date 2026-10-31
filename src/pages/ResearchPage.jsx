@@ -16,6 +16,14 @@ import {
   ComicBgPattern,
 } from '../components/shinchan/ShinchanMascots';
 import ComicStamp from '../components/shinchan/ComicStamp';
+import {
+  LaptopMinion,
+  StewartActionMinion,
+  ScientistMinion,
+  BananaItem,
+  BobCarMinion,
+  MinionBgPattern,
+} from '../components/minion/MinionMascots';
 import { useTheme } from '../context/ThemeContext';
 import { useSession } from '../context/SessionContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -35,7 +43,7 @@ const FEATURE_META = {
 
 export default function ResearchPage() {
   const navigate = useNavigate();
-  const { isShinchanTheme } = useTheme();
+  const { theme, isMinionTheme, isShinchanTheme, isClinicalTheme } = useTheme();
   const { session, resetSession } = useSession();
 
   const handleStartScreening = () => {
@@ -157,8 +165,9 @@ export default function ResearchPage() {
 
   return (
     <PageTransition>
-      <div style={{ minHeight: '100vh', background: isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <div style={{ minHeight: '100vh', background: isMinionTheme ? '#FEFCE8' : isShinchanTheme ? '#FFFEEF' : '#ffffff', display: 'flex', flexDirection: 'column', position: 'relative' }}>
         <ComicBgPattern variant="doodle" opacity={0.26} />
+        <MinionBgPattern opacity={0.24} />
         {/* Navigation Bar */}
         <nav
           style={{
@@ -195,13 +204,12 @@ export default function ResearchPage() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
-              GAZE<span style={{ color: 'var(--orange-500)' }}>SCREEN</span>
+              GAZE<span style={{ color: isMinionTheme ? '#245B9E' : 'var(--orange-500)' }}>SCREEN</span>
             </button>
             <span style={{ color: 'var(--ink-faint)', fontSize: '0.85rem' }}>/</span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--ink-muted)', fontWeight: 700 }}>
               RESEARCH BENCHMARK
             </span>
-            <ComicStamp text="47 BENCHMARKS" size="sm" rotate={-1} color="#059669" bgColor="#ECFDF5" />
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -218,6 +226,34 @@ export default function ResearchPage() {
 
         {/* Main Content */}
         <main style={{ flex: 1, padding: '2rem 1.5rem 3rem', position: 'relative' }}>
+          {/* ── MINION MARGIN MASCOTS ── */}
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              right: 'clamp(0.5rem, 2.5vw, 3.5rem)',
+              top: '17rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          >
+            <ScientistMinion size={210} alt="Scientist Minion Lab Director" style={{ width: 'clamp(140px, 15vw, 210px)', filter: 'drop-shadow(5px 7px 0px rgba(18,24,38,0.28))' }} />
+          </div>
+
+          <div
+            className="minion-hide-mobile"
+            style={{
+              position: 'absolute',
+              left: 'clamp(0.5rem, 2.5vw, 3.5rem)',
+              top: '17rem',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          >
+            <StewartActionMinion size={180} alt="Stewart Minion in Action" style={{ width: 'clamp(120px, 13vw, 180px)', filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.28))' }} />
+          </div>
+
+          {/* ── SHINCHAN MARGIN MASCOTS ── */}
           {/* Kantam Robo — bold decorative right-margin accent from recruitment.githubsrmist.in */}
           <div
             className="shinchan-hide-mobile"
@@ -248,6 +284,34 @@ export default function ResearchPage() {
             <ActionPunchMascot size={170} alt="Action Punch Benchmark" style={{ width: 'clamp(120px, 13vw, 180px)', filter: 'drop-shadow(4px 6px 0px rgba(18,24,38,0.24))' }} />
           </div>
           <div style={{ maxWidth: 1060, margin: '0 auto', position: 'relative', zIndex: 5 }}>
+            {/* Minion Researcher Lab Note Banner */}
+            {isMinionTheme && (
+              <div
+                className="minion-hide-mobile"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  marginBottom: '1.25rem',
+                  padding: '10px 14px',
+                  background: '#FFFBEB',
+                  border: '2px solid var(--ink)',
+                  borderRadius: '4px',
+                  boxShadow: '3px 3px 0px var(--ink)',
+                }}
+              >
+                <LaptopMinion size={68} alt="Prof. Minion" style={{ filter: 'drop-shadow(2px 2px 0px rgba(18,24,38,0.2))' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.76rem', color: 'var(--ink)', fontWeight: 800 }}>
+                    Prof. Minion's Lab Benchmark Note:
+                  </div>
+                  <div style={{ fontSize: '0.76rem', color: '#1F2937', fontWeight: 600, lineHeight: 1.35 }}>
+                    Trained on real EyeLink 1000 infrared pupillometry data (47 children aged 8–13) across validated clinical folds!
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Shinchan Researcher Lab Note Banner — clean single-mascot composition */}
             {isShinchanTheme && (
               <div
@@ -320,7 +384,7 @@ export default function ResearchPage() {
               </div>
 
               <h1 className="text-section" style={{ fontSize: '1.8rem', marginBottom: 4 }}>
-                <ShinyText color="var(--ink)" shineColor="var(--blue-600)" speed={3.5}>
+                <ShinyText color="var(--ink)" shineColor="var(--blue-600, #2563eb)" speed={3.5}>
                   Laboratory Research Model
                 </ShinyText>
               </h1>
@@ -652,7 +716,7 @@ export default function ResearchPage() {
                         )}
                       </div>
 
-                      {/* Export Button with Shinchan & Shiro relaxing mascot */}
+                      {/* Export Button with Theme Mascots (Bob in toy car for Minion / Shinchan & Shiro for Shinchan) */}
                       {result && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <button
@@ -671,9 +735,16 @@ export default function ResearchPage() {
                           >
                             Export Participant JSON Telemetry
                           </button>
-                          <div className="shinchan-hide-mobile" style={{ flexShrink: 0 }}>
-                            <ShinchanShiroRelaxMascot size={64} alt="Shinchan and Shiro Relaxing" style={{ filter: 'drop-shadow(2px 2.5px 0px rgba(18,24,38,0.22))' }} />
-                          </div>
+                          {isMinionTheme && (
+                            <div className="minion-hide-mobile" style={{ flexShrink: 0 }}>
+                              <BobCarMinion size={68} alt="Bob in toy car beside Export" style={{ filter: 'drop-shadow(2px 2.5px 0px rgba(18,24,38,0.22))' }} />
+                            </div>
+                          )}
+                          {isShinchanTheme && (
+                            <div className="shinchan-hide-mobile" style={{ flexShrink: 0 }}>
+                              <ShinchanShiroRelaxMascot size={64} alt="Shinchan and Shiro Relaxing" style={{ filter: 'drop-shadow(2px 2.5px 0px rgba(18,24,38,0.22))' }} />
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
