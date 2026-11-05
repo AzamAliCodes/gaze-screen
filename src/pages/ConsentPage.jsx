@@ -27,6 +27,7 @@ import {
 import MinionSpeechBubble from '../components/minion/MinionSpeechBubble';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
+import { preloadFaceMesh } from '../lib/faceMeshLoader';
 
 function NavBar() {
   const navigate = useNavigate();
@@ -265,6 +266,11 @@ export default function ConsentPage() {
       resetSession();
     }
   }, [isCompletedSession, resetSession]);
+
+  // Pre-warm MediaPipe neural network weights in the background
+  useEffect(() => {
+    preloadFaceMesh();
+  }, []);
 
   const isAgeEntered = form.childAge.trim().length > 0;
   const numAge = parseInt(form.childAge, 10);

@@ -31,6 +31,7 @@ import {
 import MinionSpeechBubble from '../components/minion/MinionSpeechBubble';
 import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/ThemeToggle';
+import { preloadFaceMesh } from '../lib/faceMeshLoader';
 
 function NavBar() {
   const navigate = useNavigate();
@@ -206,6 +207,7 @@ export default function CalibrationPage() {
   );
 
   useEffect(() => {
+    preloadFaceMesh();
     if (!hasConsent) {
       navigate('/consent', { replace: true });
     }
@@ -218,6 +220,21 @@ export default function CalibrationPage() {
     let stopped = false;
     let autoPassTimeout;
 
+    async function acquireCameraStream(constraints, retries = 3, delayMs = 400) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          return await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (err) {
+          if ((err.name === 'NotReadableError' || err.name === 'TrackStartError') && i < retries - 1) {
+            console.warn(`[CalibrationPage] Camera hardware busy, retrying in ${delayMs}ms (attempt ${i + 1}/${retries})...`);
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+            continue;
+          }
+          throw err;
+        }
+      }
+    }
+
     async function startCamera() {
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -226,24 +243,24 @@ export default function CalibrationPage() {
 
         let stream = null;
         try {
-          stream = await navigator.mediaDevices.getUserMedia({
+          stream = await acquireCameraStream({
             video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
           });
         } catch (err1) {
           console.warn('[CalibrationPage] Attempt 1 (user camera) failed, trying ideal resolution:', err1);
-          if (err1.name === 'NotAllowedError' || err1.name === 'PermissionDeniedError' || err1.name === 'NotReadableError') {
+          if (err1.name === 'NotAllowedError' || err1.name === 'PermissionDeniedError') {
             throw err1;
           }
           try {
-            stream = await navigator.mediaDevices.getUserMedia({
+            stream = await acquireCameraStream({
               video: { width: { ideal: 640 }, height: { ideal: 480 } },
             });
           } catch (err2) {
             console.warn('[CalibrationPage] Attempt 2 failed, falling back to basic video:', err2);
-            if (err2.name === 'NotAllowedError' || err2.name === 'PermissionDeniedError' || err2.name === 'NotReadableError') {
+            if (err2.name === 'NotAllowedError' || err2.name === 'PermissionDeniedError') {
               throw err2;
             }
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            stream = await acquireCameraStream({ video: true });
           }
         }
 
@@ -257,6 +274,11 @@ export default function CalibrationPage() {
 
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = async () => {
+            try {
+              await videoRef.current?.play();
+            } catch (_) {}
+          };
           try {
             await videoRef.current.play();
           } catch (playErr) {
@@ -264,14 +286,22 @@ export default function CalibrationPage() {
           }
         }
 
-        setChecks((p) => ({ ...p, camera: 'ok' }));
+        // Start diagnostic feed analysis once video starts delivering frames
+        const checkVideoActive = () => {
+          if (stopped) return;
+          const v = videoRef.current;
+          if (v && v.videoWidth > 0 && v.readyState >= 2) {
+            setChecks((p) => ({ ...p, camera: 'ok' }));
+            analyzeFeed();
+          } else {
+            setTimeout(checkVideoActive, 50);
+          }
+        };
+        checkVideoActive();
 
-        // Start diagnostic feed analysis
-        analyzeFeed();
-
-        // Immediate calibration confirmation once stream starts (250ms)
+        // Auto-confirm once video feed is delivering verified frames
         autoPassTimeout = setTimeout(() => {
-          if (!stopped) {
+          if (!stopped && videoRef.current && videoRef.current.videoWidth > 0) {
             setChecks({
               camera: 'ok',
               lighting: 'ok',
@@ -281,7 +311,7 @@ export default function CalibrationPage() {
             setAllReady(true);
             updateSession({ calibrated: true, lightingOk: true, cameraReady: true });
           }
-        }, 250);
+        }, 1200);
       } catch (err) {
         console.error('Camera access error:', err);
         setChecks({ camera: 'warning', lighting: 'warning', faceDetected: 'warning', framing: 'warning' });
@@ -572,6 +602,7 @@ export default function CalibrationPage() {
                         transform: 'scaleX(-1)',
                         objectFit: 'cover',
                       }}
+                      autoPlay
                       muted
                       playsInline
                     />
